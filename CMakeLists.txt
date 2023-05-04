@@ -11,3 +11,5 @@ target_compile_features(network-monitor
         cxx_std_11  #ensures that compiler's mode is at least C++11
 )
 
+find_package(Boost REQUIRED COMPONENTS system)
+target_link_libraries(network-monitor PRIVATE Boost::boost Boost::system)

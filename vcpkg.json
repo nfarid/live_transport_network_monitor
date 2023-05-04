@@ -2,5 +2,7 @@
     "name": "network-monitor",
     "version": "0.1.0",
     "dependencies": [
+        "boost-asio",
+        "boost-system"
     ]
 }
