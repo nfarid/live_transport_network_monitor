@@ -1,11 +1,16 @@
 
-#include <boost/asio.hpp>
+#include <boost/asio/buffer.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/beast/core/tcp_stream.hpp>
+#include <boost/beast/websocket.hpp>
 #include <boost/system/error_code.hpp>
 
 #include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <thread>
+#include <string>
 #include <vector>
 
 using std::size_t;
@@ -19,32 +24,51 @@ int log(boost::system::error_code ec) {
 }
 
 int main() {
-    std::cerr << std::hex;
-    std::cerr << "[" << std::setw(14) << std::this_thread::get_id() << "] main" << std::endl;
     //Always start with an I/O context object
     boost::asio::io_context ioc{};
     boost::system::error_code ec{};
 
-    //Creates an I/O object. Every boost.asio i/o object needs an io_context
-    boost::asio::ip::tcp::socket socket{boost::asio::make_strand(ioc)};
 
-
-    constexpr size_t nThreads = 4;
-
+    std::cout<<"Resolving endpoint hostname"<<std::endl;
     boost::asio::ip::tcp::resolver resolver{ioc};
-    const auto resolverIt = resolver.resolve("google.com", "80", ec);
+    constexpr const char* hostname = "ltnm.learncppthroughprojects.com";
+    const auto resolverIt = resolver.resolve(hostname, "80", ec);
     if(ec)
         return log(ec);
-    for(size_t i=0; i<nThreads; ++i)
-        socket.async_connect(*resolverIt, [](boost::system::error_code ec){log(ec);} );
+    std::cout<<"Resolving complete!"<<std::endl;
 
 
-    std::vector<std::thread> threadLst;
-    threadLst.reserve(nThreads);
-    for(size_t i=0; i<nThreads; ++i)
-        threadLst.emplace_back([&ioc](){ioc.run();} );
-    for(size_t i=0; i<nThreads; ++i)
-        threadLst[i].join();
+    std::cout<<"TCP connecting to endpoint"<<std::endl;
+    boost::beast::tcp_stream socket{ioc};
+    socket.connect(*resolverIt, ec);
+    if(ec)
+        return log(ec);
+    std::cout<<"TCP connection setup!"<<std::endl;
+
+    std::cout<<"Initiating websocket handshake"<<std::endl;
+    boost::beast::websocket::stream<boost::beast::tcp_stream> ws{std::move(socket)};
+    ws.handshake(hostname, "/echo", ec);
+    if(ec)
+        return log(ec);
+    ws.text(true);
+    std::cout<<"Websocket handshook!"<<std::endl;
+
+    std::cout<<"Sending a message"<<std::endl;
+    const std::string outputMessage = "Hello, World!";
+    boost::asio::const_buffer wBuf(outputMessage.data(), outputMessage.size() );
+    ws.write(wBuf, ec);
+    if(ec)
+        return log(ec);
+    std::cout<<"Message Received!"<<std::endl;
+
+    std::cout<<"Receiving a message"<<std::endl;
+    std::string inputMessage;
+    auto rBuf =  boost::asio::dynamic_buffer(inputMessage);
+    ws.read(rBuf, ec);
+    if(ec)
+        return log(ec);
+    std::cout<<"Recieved Message: "<<inputMessage<<std::endl;
+
 
     return 0;
 }
