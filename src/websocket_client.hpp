@@ -2,6 +2,9 @@
 #define HPP_WEBSOCKETCLIENT_
 
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/beast/websocket/stream.hpp>
+#include <boost/beast/core/tcp_stream.hpp>
 
 #include <functional>
 #include <string>
@@ -30,8 +33,6 @@ public:
             boost::asio::io_context& ioc_
     );
 
-    ~WebSocketClient();
-    WebSocketClient& operator=(WebSocketClient&&) = delete; //uncopyable and unmovable
 
     /*! \brief Connect to the server
      *
@@ -41,9 +42,9 @@ public:
      *  \param onDisconnect Called when the connection is closed by the server or connection error.
      */
     void connect(
-            std::function<void(boost::system::error_code)> onConnect = nullptr,
-            std::function<void(boost::system::error_code, std::string&&)> onMessage = nullptr,
-            std::function<void(boost::system::error_code)> onDisconnect = nullptr
+            std::function<void(boost::system::error_code)> onConnect = [](auto...){},
+            std::function<void(boost::system::error_code, std::string&&)> onMessage = [](auto...){},
+            std::function<void(boost::system::error_code)> onDisconnect = [](auto...){}
     );
 
     /*! \brief Send a text message to the WebSocket server.
@@ -54,15 +55,22 @@ public:
      */
     void send(
             const std::string& message,
-            std::function<void(boost::system::error_code)> onSend = nullptr
+            std::function<void(boost::system::error_code)> onSend = [](auto...){}
     );
 
     /*! \brief Close the WebSoccket connection.
      *
      *  \param onClose Called when the connection is closed, successfully or not.
      */
-    void close(std::function<void(boost::system::error_code)> onClose = nullptr);
+    void close(std::function<void(boost::system::error_code)> onClose = [](auto...){});
 
+private:
+    boost::beast::websocket::stream<boost::beast::tcp_stream> m_ws;
+    boost::asio::ip::tcp::resolver m_resolver;
+    std::string m_url{};
+    std::string m_endpoint{};
+    std::string m_port{};
+    boost::beast::flat_buffer m_rBuf;
 };
 
 } //namespace NetworkMonitor
