@@ -35,8 +35,10 @@ target_sources(test-network_monitor
     PRIVATE
         "tests/main.test.cpp"
 )
+find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 target_link_libraries(test-network_monitor
     PRIVATE
         live_transport::network_monitor
         Boost::boost
+        Boost::unit_test_framework
 )
