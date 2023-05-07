@@ -1,5 +1,5 @@
 
-#include "websocket_client.hpp"
+#include <network_monitor/websocket_client.hpp>
 
 #include <boost/beast/core/buffers_to_string.hpp>
 
