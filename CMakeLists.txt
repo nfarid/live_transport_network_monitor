@@ -45,6 +45,12 @@ target_sources(test-network_monitor
         "tests/network_monitor/websocket_client.test.cpp"
 )
 
+target_compile_definitions(test-network_monitor
+    PRIVATE
+        cxx_std_17
+        TEST_CACERT_PEM="${CMAKE_CURRENT_SOURCE_DIR}/tests/cacert.pem" #cacert is only for tests
+)
+
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 target_link_libraries(test-network_monitor
     PRIVATE
