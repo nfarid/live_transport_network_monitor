@@ -57,14 +57,10 @@ void WebSocketClient::connect(
                 if(ec)
                     onDisconnect(ec);
                 LOG("Websocket handshook", ec);
+                m_isClosed = false;
                 onConnect(ec);
 
-                m_ws.async_read(m_rBuf, [this, onMessage, onDisconnect](error_code ec, size_t){
-                    if(ec == beast::websocket::error::closed)
-                        onDisconnect(ec);
-                    LOG("Received message", ec);
-                    onMessage(ec, beast::buffers_to_string(m_rBuf.cdata() ) );
-                });
+                listenForMessages(onMessage, onDisconnect);
             });
         });
     });
@@ -81,9 +77,26 @@ void WebSocketClient::send(
 }
 
 void WebSocketClient::close(std::function<void (error_code)> onClose) {
-    m_ws.async_close(beast::websocket::close_code::normal, [onClose](error_code ec){
-        onClose(ec);
+    m_ws.async_close(beast::websocket::close_code::normal, [onClose, this](error_code ec){
+        m_isClosed = true;
         LOG("Closed connection", ec);
+        onClose(ec);
+    });
+}
+
+void WebSocketClient::listenForMessages(
+        std::function<void(error_code, std::string&&)> onMessage,
+        std::function<void(error_code)> onDisconnect)
+{
+    m_ws.async_read(m_rBuf, [this, onMessage, onDisconnect](error_code ec, size_t n){
+        if(m_isClosed || ec == beast::websocket::error::closed) {
+            onDisconnect(ec);
+            return;
+        }
+        LOG("Received message", ec);
+        onMessage(ec, beast::buffers_to_string(m_rBuf.cdata() ) );
+        m_rBuf.consume(n);
+        listenForMessages(onMessage, onDisconnect);
     });
 }
 

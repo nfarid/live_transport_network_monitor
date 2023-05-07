@@ -9,9 +9,10 @@
 #include <functional>
 #include <string>
 
+using std::size_t;
+
 namespace NetworkMonitor {
 
-//TODO: Implement
 /*! \brief Client to connect to a WebSocket server over plain TCP.
  */
 class WebSocketClient
@@ -67,10 +68,18 @@ public:
 private:
     boost::beast::websocket::stream<boost::beast::tcp_stream> m_ws;
     boost::asio::ip::tcp::resolver m_resolver;
+    boost::beast::flat_buffer m_rBuf{};
+
     std::string m_url{};
     std::string m_endpoint{};
     std::string m_port{};
-    boost::beast::flat_buffer m_rBuf;
+
+    bool m_isClosed = true;
+
+    void listenForMessages(
+        std::function<void(boost::system::error_code, std::string&&)> onMessage,
+        std::function<void(boost::system::error_code)> onDisconnect
+    );
 };
 
 } //namespace NetworkMonitor
