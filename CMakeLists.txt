@@ -24,6 +24,10 @@ target_compile_features(network_monitor
     PUBLIC
         cxx_std_14
 )
+target_compile_definitions(network_monitor
+    PUBLIC
+        BOOST_ASIO_ENABLE_HANDLER_TRACKING=1
+)
 
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenSSL REQUIRED)
@@ -45,9 +49,12 @@ target_sources(test-network_monitor
         "tests/network_monitor/websocket_client.test.cpp"
 )
 
-target_compile_definitions(test-network_monitor
+target_compile_features(network_monitor
     PRIVATE
         cxx_std_17
+)
+target_compile_definitions(test-network_monitor
+    PRIVATE
         TEST_CACERT_PEM="${CMAKE_CURRENT_SOURCE_DIR}/tests/cacert.pem" #cacert is only for tests
 )
 
