@@ -25,7 +25,7 @@ target_compile_features(network_monitor
         cxx_std_14
 )
 target_compile_definitions(network_monitor
-    PUBLIC
+    PUBLIC     #must be public to prevent segfault
         BOOST_ASIO_ENABLE_HANDLER_TRACKING=1
 )
 
