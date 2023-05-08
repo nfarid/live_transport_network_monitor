@@ -2,6 +2,10 @@
     "name": "network-monitor",
     "version": "0.1.0",
     "dependencies": [
+        {
+            "name": "curl",
+            "features": [ "ssl" ]
+        },
         "boost-asio",
         "boost-beast",
         "boost-system",

@@ -33,12 +33,15 @@ target_compile_features(network_monitor
 
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenSSL REQUIRED)
+find_package(CURL CONFIG REQUIRED)
 target_link_libraries(network_monitor
     PUBLIC
         Boost::boost
         Boost::system
         OpenSSL::SSL
         OpenSSL::Crypto
+    PRIVATE
+        CURL::libcurl
 )
 
 
