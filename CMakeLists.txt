@@ -13,10 +13,12 @@ add_library(live_transport::network_monitor ALIAS network_monitor)
 
 target_sources(network_monitor
     PRIVATE
+        "src/network_monitor/file_downloader.cpp"
         "src/network_monitor/websocket_client.cpp"
     PUBLIC FILE_SET HEADERS
         BASE_DIRS "include"
         FILES
+            "include/network_monitor/file_downloader.hpp"
             "include/network_monitor/websocket_client.hpp"
 )
 
@@ -46,6 +48,7 @@ add_executable(test-network_monitor)
 target_sources(test-network_monitor
     PRIVATE
         "tests/main.test.cpp"
+        "tests/network_monitor/file_downloader.test.cpp"
         "tests/network_monitor/websocket_client.test.cpp"
 )
 
