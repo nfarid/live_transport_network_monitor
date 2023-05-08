@@ -1,10 +1,12 @@
+
 #include <network_monitor/websocket_client.hpp>
 
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <string>
 #include <filesystem>
+#include <string>
+
 
 using NetworkMonitor::WebSocketClient;
 namespace asio = boost::asio;
@@ -61,6 +63,52 @@ BOOST_AUTO_TEST_CASE(class_WebSocketClient)
     BOOST_TEST(isClosed);
     BOOST_TEST(isReceived);
     BOOST_TEST(receivedMessage == message);
+}
+
+BOOST_AUTO_TEST_CASE(stomp_networkEvent)
+{
+    const std::string url = "ltnm.learncppthroughprojects.com";
+    const std::string endpoint = "/network-events";
+    const std::string port = "443";
+
+    asio::io_context ioc{};
+    asio::ssl::context tls{asio::ssl::context::tlsv12_client};
+    tls.load_verify_file(TEST_CACERT_PEM);
+
+    WebSocketClient client{url, endpoint, port, ioc, tls};
+
+    std::string stompFrame =
+        "STOMP\n"
+        "accept-version:1.2\n"
+        "host:ltnm.learncppthroughprojects.com\n"
+        "login:some_madeup_username\n"
+        "passcode:some_madeup_password\n"
+        "\n";
+    stompFrame.push_back('\0'); //STOMP frames end with a null byte
+
+    auto checkResponse = [](const std::string& response) {
+        // We do not parse the whole message. We only check that it contains some expected items.
+        bool ok = true;
+        ok &= response.find("ERROR") != std::string::npos;
+        ok &= response.find("ValidationInvalidAuth") != std::string::npos;
+        return ok;
+    };
+
+    bool isResponseCorrect = false;
+    client.connect(
+        [& stompFrame, & client](error_code ec){
+            BOOST_TEST(!ec);
+            client.send(stompFrame);
+        },
+        [& checkResponse, & isResponseCorrect](error_code ec, std::string&& received){
+            BOOST_TEST(!ec);
+            isResponseCorrect = checkResponse(received);
+        }
+    );
+
+    ioc.run();
+
+    BOOST_TEST(isResponseCorrect);
 }
 
 BOOST_AUTO_TEST_SUITE_END(); //network_monitor
