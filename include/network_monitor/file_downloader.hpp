@@ -15,7 +15,7 @@ namespace NetworkMonitor {
  *  \return true if successful, false otherwise
  */
 bool downloadFile(
-    const std::string& fileURl,
+    const std::string& fileURL,
     const std::filesystem::path& destination,
     const std::filesystem::path& cacertFile = ""
 );
