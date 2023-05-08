@@ -24,10 +24,10 @@ target_compile_features(network_monitor
     PUBLIC
         cxx_std_14
 )
-target_compile_definitions(network_monitor
-    PUBLIC     #must be public to prevent segfault
-        BOOST_ASIO_ENABLE_HANDLER_TRACKING=1
-)
+#target_compile_definitions(network_monitor
+#    PUBLIC     #must be public to prevent segfault
+#        BOOST_ASIO_ENABLE_HANDLER_TRACKING=1
+#)
 
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenSSL REQUIRED)

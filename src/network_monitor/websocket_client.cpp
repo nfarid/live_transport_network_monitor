@@ -1,6 +1,7 @@
 
 #include <network_monitor/websocket_client.hpp>
 
+#include <boost/asio/ssl/stream.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 
 #include <iostream>
@@ -29,9 +30,10 @@ WebSocketClient::WebSocketClient(
         const std::string& url_,
         const std::string& endpoint_,
         const std::string& port_,
-        asio::io_context& ioc_)
-    :
-        m_ws{ioc_},
+        asio::io_context& ioc_,
+        asio::ssl::context& tls_
+    ) :
+        m_ws{ioc_, tls_},
         m_resolver{ioc_},
         m_url{url_},
         m_endpoint{endpoint_},
@@ -44,23 +46,28 @@ void WebSocketClient::connect(
         std::function<void(error_code)> onDisconnect)
 {
     using namespace asio::ip;
-    //Capturing functions by reference to prevent lifetime issues
+    //Capturing functions by value to prevent lifetime issues
     m_resolver.async_resolve(m_url, m_port, [this, onConnect, onMessage, onDisconnect](error_code ec, tcp::resolver::results_type rit){
         if(ec)
             onDisconnect(ec);
         LOG("Resolved url", ec);
-        m_ws.next_layer().async_connect(rit, [this, onConnect, onMessage, onDisconnect](error_code ec, tcp::endpoint){
+        m_ws.next_layer().next_layer().async_connect(rit, [this, onConnect, onMessage, onDisconnect](error_code ec, tcp::endpoint){
             if(ec)
                 onDisconnect(ec);
             LOG("TCP connection established", ec);
-            m_ws.async_handshake(m_url, m_endpoint, [this, onConnect, onMessage, onDisconnect](error_code ec){
+            m_ws.next_layer().async_handshake(asio::ssl::stream_base::handshake_type::client, [this, onConnect, onMessage, onDisconnect] (error_code ec) {
                 if(ec)
                     onDisconnect(ec);
-                LOG("Websocket handshook", ec);
-                m_isClosed = false;
-                onConnect(ec);
+                LOG("TLS handshook", ec);
+                m_ws.async_handshake(m_url, m_endpoint, [this, onConnect, onMessage, onDisconnect](error_code ec){
+                    if(ec)
+                        onDisconnect(ec);
+                    LOG("Websocket handshook", ec);
+                    m_isClosed = false;
+                    onConnect(ec);
 
-                listenForMessages(onMessage, onDisconnect);
+                    listenForMessages(onMessage, onDisconnect);
+                });
             });
         });
     });

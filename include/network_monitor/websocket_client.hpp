@@ -3,8 +3,10 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl/context.hpp>
 #include <boost/beast/websocket/stream.hpp>
 #include <boost/beast/core/tcp_stream.hpp>
+#include <boost/beast/ssl/ssl_stream.hpp>
 
 #include <functional>
 #include <string>
@@ -26,12 +28,14 @@ public:
      *  \param endpoint_  The endpoint on the server to connect to. E.g. /echo
      *  \param port_      The port on the server.
      *  \param ioc_       The io_context object. The user takes care of calling ioc.run().
+     *  \param tls_       The TLS context to setup a TLS socket stream.
      */
     explicit WebSocketClient(
             const std::string& url_,
             const std::string& endpoint_,
             const std::string& port_,
-            boost::asio::io_context& ioc_
+            boost::asio::io_context& ioc_,
+            boost::asio::ssl::context& tls_
     );
 
 
@@ -66,7 +70,7 @@ public:
     void close(std::function<void(boost::system::error_code)> onClose = [](auto...){});
 
 private:
-    boost::beast::websocket::stream<boost::beast::tcp_stream> m_ws;
+    boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream> > m_ws;
     boost::asio::ip::tcp::resolver m_resolver;
     boost::beast::flat_buffer m_rBuf{};
 
