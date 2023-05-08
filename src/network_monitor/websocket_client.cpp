@@ -22,7 +22,7 @@ static void log(const std::string& msg, error_code ec, const char* func, int lin
         std::clog<<func<<";"<<line<<"  :   " <<msg<<std::endl;
 }
 
-#define LOG(MSG, EC) log(MSG, EC, __func__, __LINE__)
+#define LOG(MSG, EC) /*log(MSG, EC, __func__, __LINE__)*/
 
 
 WebSocketClient::WebSocketClient(
