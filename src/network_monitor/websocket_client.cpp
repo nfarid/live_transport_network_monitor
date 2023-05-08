@@ -2,6 +2,7 @@
 #include <network_monitor/websocket_client.hpp>
 
 #include <boost/asio/ssl/stream.hpp>
+#include <boost/asio/strand.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 
 #include <iostream>
@@ -14,16 +15,14 @@ namespace beast = boost::beast;
 using boost::system::error_code;
 using std::size_t;
 
-static void log(const std::string& msg, error_code ec) {
-    if(ec) {
-        std::cerr<<ec.value()<<" : "<<ec.message()<<std::endl;
-        std::exit(ec.value() );
-    } else {
-        std::clog<<msg<<std::endl;
-    }
+static void log(const std::string& msg, error_code ec, const char* func, int line) {
+    if(ec)
+        std::cerr<<func<<";"<<line<<"  :   " <<ec.value()<<" : "<<ec.message()<<std::endl;
+    else
+        std::clog<<func<<";"<<line<<"  :   " <<msg<<std::endl;
 }
 
-#define LOG(MSG, EC) std::clog<<__func__<<";"<<__LINE__<<"  :  "; log(MSG, EC)
+#define LOG(MSG, EC) log(MSG, EC, __func__, __LINE__)
 
 
 WebSocketClient::WebSocketClient(
@@ -33,8 +32,8 @@ WebSocketClient::WebSocketClient(
         asio::io_context& ioc_,
         asio::ssl::context& tls_
     ) :
-        m_ws{ioc_, tls_},
-        m_resolver{ioc_},
+        m_ws{asio::make_strand(ioc_), tls_},
+        m_resolver{asio::make_strand(ioc_)},
         m_url{url_},
         m_endpoint{endpoint_},
         m_port{port_}
@@ -48,24 +47,26 @@ void WebSocketClient::connect(
     using namespace asio::ip;
     //Capturing functions by value to prevent lifetime issues
     m_resolver.async_resolve(m_url, m_port, [this, onConnect, onMessage, onDisconnect](error_code ec, tcp::resolver::results_type rit){
-        if(ec)
-            onDisconnect(ec);
         LOG("Resolved url", ec);
+        if(ec)
+            return onDisconnect(ec);
+
         m_ws.next_layer().next_layer().async_connect(rit, [this, onConnect, onMessage, onDisconnect](error_code ec, tcp::endpoint){
-            if(ec)
-                onDisconnect(ec);
             LOG("TCP connection established", ec);
+            if(ec)
+                return onDisconnect(ec);
+
             m_ws.next_layer().async_handshake(asio::ssl::stream_base::handshake_type::client, [this, onConnect, onMessage, onDisconnect] (error_code ec) {
-                if(ec)
-                    onDisconnect(ec);
                 LOG("TLS handshook", ec);
+                if(ec)
+                    return onDisconnect(ec);
+
                 m_ws.async_handshake(m_url, m_endpoint, [this, onConnect, onMessage, onDisconnect](error_code ec){
-                    if(ec)
-                        onDisconnect(ec);
                     LOG("Websocket handshook", ec);
+                    if(ec)
+                        return onDisconnect(ec);
                     m_isClosed = false;
                     onConnect(ec);
-
                     listenForMessages(onMessage, onDisconnect);
                 });
             });
@@ -79,14 +80,20 @@ void WebSocketClient::send(
 {
     m_ws.async_write(asio::buffer(message), [onSend](error_code ec, size_t){
         LOG("Sent message", ec);
+        if(ec)
+            return;
+
         onSend(ec);
     });
 }
 
 void WebSocketClient::close(std::function<void (error_code)> onClose) {
     m_ws.async_close(beast::websocket::close_code::normal, [onClose, this](error_code ec){
-        m_isClosed = true;
         LOG("Closed connection", ec);
+        if(ec)
+            return;
+
+        m_isClosed = true;
         onClose(ec);
     });
 }
@@ -96,11 +103,10 @@ void WebSocketClient::listenForMessages(
         std::function<void(error_code)> onDisconnect)
 {
     m_ws.async_read(m_rBuf, [this, onMessage, onDisconnect](error_code ec, size_t n){
-        if(m_isClosed || ec == beast::websocket::error::closed) {
-            onDisconnect(ec);
-            return;
-        }
+        if(m_isClosed || ec)
+            return onDisconnect(ec);
         LOG("Received message", ec);
+
         onMessage(ec, beast::buffers_to_string(m_rBuf.cdata() ) );
         m_rBuf.consume(n);
         listenForMessages(onMessage, onDisconnect);
