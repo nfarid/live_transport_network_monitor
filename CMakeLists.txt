@@ -31,13 +31,15 @@ target_compile_features(network_monitor
 #        BOOST_ASIO_ENABLE_HANDLER_TRACKING=1
 #)
 
-find_package(Boost REQUIRED COMPONENTS system)
-find_package(OpenSSL REQUIRED)
+find_package(Boost MODULE REQUIRED COMPONENTS system)
+find_package(OpenSSL MODULE REQUIRED)
 find_package(CURL CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 target_link_libraries(network_monitor
     PUBLIC
         Boost::boost
         Boost::system
+        nlohmann_json::nlohmann_json
         OpenSSL::SSL
         OpenSSL::Crypto
     PRIVATE

@@ -10,6 +10,7 @@
         "boost-beast",
         "boost-system",
         "boost-test",
+        "nlohmann-json",
         "openssl"
     ]
 }
