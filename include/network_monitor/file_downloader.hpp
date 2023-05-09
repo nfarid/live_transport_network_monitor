@@ -25,7 +25,9 @@ bool downloadFile(
 
 /*! \brief Parse a local file into a JSON object.
  *
- *  \param source   The path to the JSON file to load and parse, must exist.
+ *  \param source   The path to the JSON file to load and parse, should exist.
+ *
+ *  \return the parsed json if correct, value_t::discarded if parsing error.
  */
 nlohmann::json parseJsonFile(const std::filesystem::path& source);
 

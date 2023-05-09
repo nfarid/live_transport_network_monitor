@@ -4,6 +4,7 @@
 #include <curl/curl.h>
 
 #include <cstdio>
+#include <fstream>
 #include <iostream>
 
 
@@ -68,8 +69,17 @@ bool downloadFile(
 }
 
 nlohmann::json parseJsonFile(const std::filesystem::path& source) {
-    //TODO: Implement
-    return {};
+    if(!std::filesystem::exists(source) ) {
+        std::cerr<<__func__<<":"<<__LINE__<<": unable to find line: "<<source<<std::endl;
+        return nlohmann::json::value_t::discarded;
+    }
+    std::ifstream inputFile{source};
+    try {
+        return nlohmann::json::parse(inputFile);
+    } catch(std::exception& ex) {
+        std::cerr<<__func__<<":"<<__LINE__<<": JSON parsing error: "<<ex.what()<<std::endl;
+        return nlohmann::json::value_t::discarded;
+    }
 }
 
 }

@@ -54,6 +54,7 @@ BOOST_AUTO_TEST_CASE(test_parseJsonFile)
 {
     const fs::path networkLayoutFile = TEST_NETWORK_LAYOUT;
     const auto networkLayout = parseJsonFile(networkLayoutFile);
+    BOOST_TEST_REQUIRE(!networkLayout.is_discarded() );
 
     BOOST_TEST_REQUIRE(networkLayout.contains("lines") );
     BOOST_TEST_REQUIRE(networkLayout.at("lines").is_array() );
