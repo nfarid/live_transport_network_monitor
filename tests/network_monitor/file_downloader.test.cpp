@@ -8,10 +8,16 @@
 #include <fstream>
 #include <string>
 
-using NetworkMonitor::downloadFile;
+using NetworkMonitor::downloadFile, NetworkMonitor::parseJsonFile;
 namespace fs = std::filesystem;
 
 BOOST_AUTO_TEST_SUITE(network_monitor);
+
+BOOST_AUTO_TEST_CASE(network_layout_file)
+{
+    BOOST_TEST(std::filesystem::exists(TEST_NETWORK_LAYOUT) );
+}
+
 
 BOOST_AUTO_TEST_CASE(file_downloader)
 {
@@ -42,6 +48,24 @@ BOOST_AUTO_TEST_CASE(file_downloader)
 
     // Clean up.
     fs::remove(destination);
+}
+
+BOOST_AUTO_TEST_CASE(test_parseJsonFile)
+{
+    const fs::path networkLayoutFile = TEST_NETWORK_LAYOUT;
+    const auto networkLayout = parseJsonFile(networkLayoutFile);
+
+    BOOST_TEST_REQUIRE(networkLayout.contains("lines") );
+    BOOST_TEST_REQUIRE(networkLayout.at("lines").is_array() );
+    BOOST_TEST_REQUIRE(!networkLayout.at("lines").empty() );
+
+    BOOST_TEST_REQUIRE(networkLayout.contains("stations") );
+    BOOST_TEST_REQUIRE(networkLayout.at("stations").is_array() );
+    BOOST_TEST_REQUIRE(!networkLayout.at("stations").empty() );
+
+    BOOST_TEST_REQUIRE(networkLayout.contains("travel_times") );
+    BOOST_TEST_REQUIRE(networkLayout.at("travel_times").is_array() );
+    BOOST_TEST_REQUIRE(!networkLayout.at("travel_times").empty() );
 }
 
 BOOST_AUTO_TEST_SUITE_END();

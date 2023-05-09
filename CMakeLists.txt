@@ -64,6 +64,7 @@ target_compile_features(network_monitor
 target_compile_definitions(test-network_monitor
     PRIVATE
         TEST_CACERT_PEM="${CMAKE_CURRENT_SOURCE_DIR}/tests/cacert.pem" #cacert is only for tests
+        TEST_NETWORK_LAYOUT="${CMAKE_CURRENT_SOURCE_DIR}/tests/network-layout.json"
 )
 
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
