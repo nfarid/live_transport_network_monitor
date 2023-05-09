@@ -4,6 +4,7 @@
 #include <curl/curl.h>
 
 #include <cstdio>
+#include <memory>
 #include <fstream>
 #include <iostream>
 
@@ -16,55 +17,54 @@ bool downloadFile(
     const std::filesystem::path& cacertFile
 )
 {
-    CURL* curl = curl_easy_init();
+    std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> curl{
+        curl_easy_init(),
+        curl_easy_cleanup,
+    };
     if(!curl) {
         std::cerr<<"Unable to initialise curl"<<std::endl;
         return false;
     }
     CURLcode err = CURLE_OK;
 
-    err = curl_easy_setopt(curl, CURLOPT_URL, fileURL.c_str() );
+    err = curl_easy_setopt(curl.get(), CURLOPT_URL, fileURL.c_str() );
     if(err != CURLE_OK) {
         std::cerr<<"CURLOPT_URL error: "<<curl_easy_strerror(err)<<std::endl;
-        curl_easy_cleanup(curl);
         return false;
     }
 
-    err = curl_easy_setopt(curl, CURLOPT_CAINFO, cacertFile.c_str() );
+    err = curl_easy_setopt(curl.get(), CURLOPT_CAINFO, cacertFile.c_str() );
     if(err != CURLE_OK) {
         std::cerr<<"CURLOPT_CAINFO: "<<curl_easy_strerror(err)<<std::endl;
-        curl_easy_cleanup(curl);
         return false;
     }
 
-    err = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    err = curl_easy_setopt(curl.get(), CURLOPT_FOLLOWLOCATION, 1L);
     if(err != CURLE_OK) {
         std::cerr<<"CURLOPT_FOLLOWLOCATION error: "<<curl_easy_strerror(err)<<std::endl;
-        curl_easy_cleanup(curl);
         return false;
     }
 
-    FILE* inputFile = std::fopen(destination.c_str(), "wb");
+    std::unique_ptr<FILE, decltype(&std::fclose)> inputFile{
+        std::fopen(destination.c_str(), "wb"),
+        std::fclose,
+    };
     if(!inputFile) {
         std::perror("fopen error: ");
-        curl_easy_cleanup(curl);
         return false;
     }
-    err = curl_easy_setopt(curl, CURLOPT_WRITEDATA, inputFile);
+    err = curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, inputFile.get() );
     if(err != CURLE_OK) {
         std::cerr<<"CURLOPT_WRITEDATA error: "<<curl_easy_strerror(err)<<std::endl;
-        curl_easy_cleanup(curl);
         return false;
     }
 
-    err = curl_easy_perform(curl);
+    err = curl_easy_perform(curl.get() );
     if(err != CURLE_OK) {
         std::cerr<<"CURL file transfer error: "<<curl_easy_strerror(err)<<std::endl;
-        curl_easy_cleanup(curl);
         return false;
     }
 
-    curl_easy_cleanup(curl);
     return true;
 }
 
@@ -82,4 +82,4 @@ nlohmann::json parseJsonFile(const std::filesystem::path& source) {
     }
 }
 
-}
+} //NetworkMonitor
