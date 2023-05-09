@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(network_monitor);
 
 BOOST_AUTO_TEST_CASE(cacert_pem)
 {
-    BOOST_TEST(std::filesystem::exists(TEST_CACERT_PEM), "cacert.pem doesn't exist");
+    BOOST_TEST(std::filesystem::exists(TEST_CACERT_PEM) );
 }
 
 BOOST_AUTO_TEST_CASE(class_WebSocketClient)
