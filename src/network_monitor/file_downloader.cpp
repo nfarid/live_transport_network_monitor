@@ -67,4 +67,9 @@ bool downloadFile(
     return true;
 }
 
+nlohmann::json parseJsonFile(const std::filesystem::path& source) {
+    //TODO: Implement
+    return {};
+}
+
 }
