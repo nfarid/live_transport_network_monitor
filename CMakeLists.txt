@@ -56,6 +56,7 @@ target_sources(test-network_monitor
     PRIVATE
         "tests/main.test.cpp"
         "tests/network_monitor/file_downloader.test.cpp"
+        "tests/network_monitor/transport_network.test.cpp"
         "tests/network_monitor/websocket_client.test.cpp"
 )
 
