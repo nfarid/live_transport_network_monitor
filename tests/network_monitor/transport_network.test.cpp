@@ -206,6 +206,51 @@ BOOST_AUTO_TEST_CASE(duplicate)
     BOOST_CHECK(!ok);
 }
 
+BOOST_AUTO_TEST_CASE(missing_stations)
+{
+    TransportNetwork nw{};
+
+    // Define a line with 1 route.
+    // route0: 0 ---> 1 ---> 2
+    const Station station0 {
+        "station_000",
+        "Station Name 0",
+    };
+    const Station station1 {
+        "station_001",
+        "Station Name 1",
+    };
+    const Station station2 {
+        "station_002",
+        "Station Name 2",
+    };
+    const Route route0 {
+        "route_000",
+        "inbound",
+        "line_000",
+        "station_000",
+        "station_002",
+        {"station_000", "station_001", "station_002"},
+    };
+    const Line line {
+        "line_000",
+        "Line Name",
+        {route0},
+    };
+
+    // Expected fail: No stations in the network.
+    BOOST_TEST(!nw.addLine(line) );
+
+    // Expected fail: We add all stations except one.
+    BOOST_TEST_REQUIRE(nw.addStation(station0) );
+    BOOST_TEST_REQUIRE(nw.addStation(station1) );
+    BOOST_TEST(!nw.addLine(line) );
+
+    // Expected success: We add the final station and try again.
+    BOOST_TEST_REQUIRE(nw.addStation(station2) );
+    BOOST_TEST(nw.addLine(line) );
+}
+
 BOOST_AUTO_TEST_SUITE_END(); // AddLine
 
 BOOST_AUTO_TEST_SUITE(PassengerEvents);
@@ -348,6 +393,23 @@ BOOST_AUTO_TEST_CASE(basic)
     routes = nw.getRoutesServingStation(station3.id);
     BOOST_CHECK_EQUAL(routes.size(), 0);
 }
+
+BOOST_AUTO_TEST_CASE(lone_station)
+{
+    TransportNetwork nw{};
+
+    // Add a single station.
+    const Station station0 {
+        "station_000",
+        "Station Name 0",
+    };
+    BOOST_TEST_REQUIRE(nw.addStation(station0) );
+
+    // Check the routes served.
+    const auto routes = nw.getRoutesServingStation(station0.id);
+    BOOST_TEST(routes.empty() );
+}
+
 
 BOOST_AUTO_TEST_SUITE_END(); // GetRoutesServingStation
 
