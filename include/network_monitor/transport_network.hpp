@@ -3,6 +3,8 @@
 #define HPP_NETWORKMONITOR_TRANSPORTNETWORK_
 
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace NetworkMonitor {
@@ -129,7 +131,9 @@ public:
      *
      *  \param station - a well-formed station already in the network.
      *
-     *  \returns An empty vector if the station has no routes, or if there was an error
+     *  \returns A list of ids in NO particular order,
+     *          an empty vector if the station has no routes, or if there was an error
+     *
      */
     std::vector<Id> getRoutesServingStation(const Id& station) const;
 
@@ -151,9 +155,9 @@ public:
      */
     unsigned int getAdjacentTravelTime(const Id& stationA, const Id& stationB) const;
 
-    /*! \brief Get the total travel time between 2 stations on a specific route.
+    /*! \brief Get the total travel time from stationA to stationB.
      *
-     *  \returns - the cummulative sum of the travel time between all stations between A and B.
+     *  \returns - the cummulative sum of the travel time between all stations from A toB.
      *          0 if the function could not find the travel time, or if both stations are the same.
      *
      *  \note The travel time is the same for all routes connecting the 2 stations directly.
@@ -165,6 +169,21 @@ public:
             const Id& stationA,
             const Id& stationB
     ) const;
+
+private:
+    struct Edge {
+        int travelTime{};
+        std::unordered_set<Id> routes;
+    };
+    struct Node {
+        std::string stationName{};
+        int passengerCount{};
+        std::unordered_map<const Node*, Edge> inEdges{};
+        std::unordered_map<const Node*, Edge> outEdges{};
+    };
+
+    std::unordered_map<Id, Node> m_nodeMp{};
+
 };
 
 

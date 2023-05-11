@@ -25,8 +25,10 @@ target_sources(network_monitor
 )
 
 target_compile_features(network_monitor
-    PUBLIC
+    INTERFACE
         cxx_std_14
+    PRIVATE
+        cxx_std_20
 )
 #target_compile_definitions(network_monitor
 #    PUBLIC     #must be public to prevent segfault
