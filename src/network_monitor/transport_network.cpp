@@ -9,6 +9,11 @@ using std::size_t;
 
 namespace NetworkMonitor {
 
+bool TransportNetwork::fromJson(nlohmann::json&& src) {
+    //TODO: Implement
+    return false;
+}
+
 bool TransportNetwork::addStation(const Station& station) {
     return m_nodeMp.insert({
         station.id,

@@ -2,6 +2,8 @@
 #ifndef HPP_NETWORKMONITOR_TRANSPORTNETWORK_
 #define HPP_NETWORKMONITOR_TRANSPORTNETWORK_
 
+#include <nlohmann/json_fwd.hpp>
+
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -92,6 +94,19 @@ struct PassengerEvent {
  */
 class TransportNetwork {
 public:
+    /*! \brief Populate the network from a JSON object.
+     *
+     *  \param src Ownership of the source JSON object is moved to this method.
+     *
+     *  \returns false if stations and lines where parsed successfully, but not the travel times.
+     *
+     *  \throws std::runtime_error If there's an issue adding new stations or lines to the network.
+     *                             but the JSON items were parsed correctly.
+     *
+     *  \throws nlohmann::json::exception If there was a problem parsing the JSON object.
+     */
+    bool fromJson(nlohmann::json&& src);
+
     /*! \brief Add a station to the network.
      *
      *  \param station - a well-formed station that's not in the network
