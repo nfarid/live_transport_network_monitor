@@ -1,7 +1,6 @@
 
 #include <network_monitor/transport_network.hpp>
 
-#include <cassert>
 #include <cstddef>
 #include <set>
 #include <stdexcept>
@@ -23,15 +22,18 @@ bool TransportNetwork::addStation(const Station& station) {
 
 bool TransportNetwork::addLine(const Line& line) {
     for(const Route& route : line.routes) {
-        assert(route.stops.size() >= 2);
+        if(route.stops.size() < 2)
+            return false;
+        for(const auto& stationId : route.stops) {
+            if(!m_nodeMp.contains(stationId) )
+                return false;
+        }
+
         for(size_t i=0; i+1<route.stops.size(); ++i) {
             const Id& fromStationId = route.stops[i];
-            if(!m_nodeMp.contains(fromStationId) )
-                return false;
             Node& fromNode = m_nodeMp[fromStationId];
             const Id& toStationId = route.stops[i+1];
-            if(!m_nodeMp.contains(toStationId) )
-                return false;
+
             Node& toNode = m_nodeMp[toStationId];
 
             auto& outEdges = fromNode.outEdges[&toNode];
