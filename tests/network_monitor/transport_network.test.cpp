@@ -16,6 +16,7 @@ using NetworkMonitor::PassengerEvent;
 using NetworkMonitor::Route;
 using NetworkMonitor::Station;
 using NetworkMonitor::TransportNetwork;
+using NetworkMonitor::parseJsonFile;
 
 BOOST_AUTO_TEST_SUITE(network_monitor);
 
@@ -597,31 +598,121 @@ BOOST_AUTO_TEST_CASE(over_route)
 BOOST_AUTO_TEST_SUITE_END(); // TravelTime
 
 
-BOOST_AUTO_TEST_SUITE(FromJson)
+BOOST_AUTO_TEST_SUITE(FromJson);
 
-BOOST_AUTO_TEST_CASE(test_folder)
+// We need this utility function to verify the routes as returned by
+// TransportNetwork::GetRoutesServingStation, which does not sort its output.
+static std::vector<Id> getSortedIds(const std::vector<Id>& routes)
 {
-    BOOST_TEST_REQUIRE(std::filesystem::exists(TEST_DATA) );
+    std::vector<Id> ids = routes;
+    std::sort(ids.begin(), ids.end());
+    return ids;
 }
 
 BOOST_AUTO_TEST_CASE(from_json_1line_1route)
 {
     const auto testFilePath = std::filesystem::path(TEST_DATA) / "from_json_1line_1route.json";
     BOOST_TEST_REQUIRE(std::filesystem::exists(testFilePath) );
-
-    TransportNetwork nw {};
-
     auto src = NetworkMonitor::parseJsonFile(testFilePath);
+    TransportNetwork nw{};
+    BOOST_TEST_REQUIRE(nw.fromJson(std::move(src) ) );
 
-    BOOST_TEST(nw.fromJson(std::move(src) ) );
-
-    auto routes = nw.getRoutesServingStation("station_0");
+    const auto routes = nw.getRoutesServingStation("station_0");
     BOOST_TEST_REQUIRE(routes.size() == 1);
-    BOOST_TEST(routes[0] == "route_0");
+    BOOST_TEST(routes.front() == "route_0");
 }
 
+BOOST_AUTO_TEST_CASE(from_json_1line_2routes)
+{
+    const auto testFilePath = std::filesystem::path(TEST_DATA) / "from_json_1line_2routes.json";
+    BOOST_TEST_REQUIRE(std::filesystem::exists(testFilePath) );
+    auto src = NetworkMonitor::parseJsonFile(testFilePath);
+    TransportNetwork nw{};
+    BOOST_TEST_REQUIRE(nw.fromJson(std::move(src) ) );
 
-BOOST_AUTO_TEST_SUITE_END();
+    std::vector<Id> routes {};
+    routes = nw.getRoutesServingStation("station_0");
+    BOOST_TEST_REQUIRE(routes.size() ==  1);
+    BOOST_TEST(routes[0] == "route_0");
+    routes = nw.getRoutesServingStation("station_1");
+    BOOST_TEST_REQUIRE(routes.size() == 2);
+    BOOST_TEST(getSortedIds(routes) == std::vector<Id>({"route_0", "route_1"}));
+}
+
+BOOST_AUTO_TEST_CASE(from_json_2lines_2routes)
+{
+    const auto testFilePath = std::filesystem::path(TEST_DATA) / "from_json_2lines_2routes.json";
+    BOOST_TEST_REQUIRE(std::filesystem::exists(testFilePath) );
+    auto src = NetworkMonitor::parseJsonFile(testFilePath);
+    TransportNetwork nw{};
+    BOOST_TEST_REQUIRE(nw.fromJson(std::move(src) ) );
+
+    std::vector<Id> routes {};
+    routes = nw.getRoutesServingStation("station_0");
+    BOOST_TEST_REQUIRE(routes.size() ==  2);
+    BOOST_TEST(routes[0] == "route_0");
+    BOOST_TEST(routes[1] == "route_1");
+    routes = nw.getRoutesServingStation("station_1");
+    BOOST_TEST_REQUIRE(routes.size() == 2);
+    BOOST_TEST(getSortedIds(routes) == std::vector<Id>({"route_0", "route_1"}) );
+}
+
+BOOST_AUTO_TEST_CASE(from_json_travel_times)
+{
+    const auto testFilePath = std::filesystem::path(TEST_DATA) / "from_json_travel_times.json";
+    BOOST_TEST_REQUIRE(std::filesystem::exists(testFilePath) );
+    auto src = NetworkMonitor::parseJsonFile(testFilePath);
+    TransportNetwork nw{};
+    BOOST_TEST_REQUIRE(nw.fromJson(std::move(src) ) );
+
+    BOOST_TEST(nw.getAdjacentTravelTime("station_0", "station_1") == 1);
+    BOOST_TEST(nw.getAdjacentTravelTime("station_1", "station_0") == 1);
+    BOOST_TEST(nw.getAdjacentTravelTime("station_1", "station_2") == 2);
+    BOOST_TEST(nw.getTravelTime("line_0", "route_0", "station_0", "station_2") == 1 + 2);
+}
+
+BOOST_AUTO_TEST_CASE(fail_on_bad_json)
+{
+    nlohmann::json src {
+        // Missing "stations"!
+        {"lines", {}},
+        {"travel_times", {}},
+    };
+    TransportNetwork nw{};
+    BOOST_CHECK_THROW(nw.fromJson(std::move(src)), nlohmann::json::exception);
+}
+
+BOOST_AUTO_TEST_CASE(fail_on_good_json_bad_items)
+{
+    nlohmann::json src {
+        {"stations", {
+            {
+                {"station_id", "station_0"},
+                {"name", "Station 0 Name"},
+            },
+            {
+                {"station_id", "station_0"},
+                {"name", "Station 0 Name"}, // station_0 is a duplicate!
+            },
+        }},
+        {"lines", {}},
+        {"travel_times", {}},
+    };
+    TransportNetwork nw{};
+    BOOST_CHECK_THROW(nw.fromJson(std::move(src)), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(fail_on_bad_travel_times)
+{
+    // In this file, we have an invalid travel time (for a station that does not exist).
+    const auto testFilePath = std::filesystem::path(TEST_DATA) / "from_json_bad_travel_times.json";
+    BOOST_TEST_REQUIRE(std::filesystem::exists(testFilePath) );
+    auto src = NetworkMonitor::parseJsonFile(testFilePath);
+    TransportNetwork nw{};
+    BOOST_TEST_REQUIRE(!nw.fromJson(std::move(src) ) );
+}
+
+BOOST_AUTO_TEST_SUITE_END(); // FromJson
 
 
 BOOST_AUTO_TEST_SUITE_END(); // class_TransportNetwork
