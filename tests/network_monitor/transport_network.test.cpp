@@ -1,4 +1,7 @@
+
 #include <network_monitor/transport_network.hpp>
+
+#include <network_monitor/file_downloader.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -593,6 +596,37 @@ BOOST_AUTO_TEST_CASE(over_route)
 
 BOOST_AUTO_TEST_SUITE_END(); // TravelTime
 
+
+BOOST_AUTO_TEST_SUITE(FromJson)
+
+BOOST_AUTO_TEST_CASE(test_folder)
+{
+    BOOST_TEST_REQUIRE(std::filesystem::exists(TEST_DATA) );
+}
+
+BOOST_AUTO_TEST_CASE(from_json_1line_1route)
+{
+    const auto testFilePath = std::filesystem::path(TEST_DATA) / "from_json_1line_1route.json";
+    BOOST_TEST_REQUIRE(std::filesystem::exists(testFilePath) );
+
+    TransportNetwork nw {};
+
+    auto src = NetworkMonitor::parseJsonFile(testFilePath);
+
+    BOOST_TEST(nw.fromJson(std::move(src) ) );
+
+    auto routes = nw.getRoutesServingStation("station_0");
+    BOOST_TEST_REQUIRE(routes.size() == 1);
+    BOOST_TEST(routes[0] == "route_0");
+}
+
+
+BOOST_AUTO_TEST_SUITE_END();
+
+
 BOOST_AUTO_TEST_SUITE_END(); // class_TransportNetwork
 
 BOOST_AUTO_TEST_SUITE_END(); // websocket_client
+
+
+
