@@ -37,7 +37,7 @@
                         "end_station_id": "station_1",
                         "line_id": "line_0",
                         "route_id": "route_0",
-                        "travel_time": "1"
+                        "travel_time": 1
                 }
         ]
 }
