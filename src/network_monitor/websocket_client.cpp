@@ -49,12 +49,12 @@ void WebSocketClient::connect(
     m_resolver.async_resolve(m_url, m_port, [this, onConnect, onMessage, onDisconnect](error_code ec, tcp::resolver::results_type rit){
         LOG("Resolved url", ec);
         if(ec)
-            return onDisconnect(ec);
+            return onConnect(ec);
 
         m_ws.next_layer().next_layer().async_connect(rit, [this, onConnect, onMessage, onDisconnect](error_code ec, tcp::endpoint){
             LOG("TCP connection established", ec);
             if(ec)
-                return onDisconnect(ec);
+                return onConnect(ec);
 
             // Some clients require that we set the host name before the TLS handshake
             if(!SSL_set_tlsext_host_name(m_ws.next_layer().native_handle(), m_url.c_str() ) )
@@ -62,7 +62,7 @@ void WebSocketClient::connect(
             m_ws.next_layer().async_handshake(asio::ssl::stream_base::handshake_type::client, [this, onConnect, onMessage, onDisconnect] (error_code ec) {
                 LOG("TLS handshook", ec);
                 if(ec)
-                    return onDisconnect(ec);
+                    return onConnect(ec);
 
                 m_ws.async_handshake(m_url, m_endpoint, [this, onConnect, onMessage, onDisconnect](error_code ec){
                     LOG("Websocket handshook", ec);
