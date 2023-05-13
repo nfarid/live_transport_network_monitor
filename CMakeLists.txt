@@ -15,13 +15,12 @@ target_sources(network_monitor
     PRIVATE
         "src/network_monitor/file_downloader.cpp"
         "src/network_monitor/transport_network.cpp"
-        "src/network_monitor/websocket_client.cpp"
     PUBLIC FILE_SET HEADERS
         BASE_DIRS "include"
         FILES
             "include/network_monitor/file_downloader.hpp"
             "include/network_monitor/transport_network.hpp"
-            "include/network_monitor/websocket_client.hpp"
+            "include/network_monitor/websocket_client.hpp" "include/network_monitor/websocket_client.inl"
 )
 
 target_compile_features(network_monitor

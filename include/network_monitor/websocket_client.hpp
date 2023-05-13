@@ -99,8 +99,9 @@ using BoostWebsocket = boost::beast::websocket::stream<BoostSsl>;
 using BoostResolver = boost::asio::ip::tcp::resolver;
 
 using BoostWebSocketClient = WebSocketClient<BoostResolver, BoostWebsocket>;
-template class WebSocketClient<BoostResolver, BoostWebsocket>;
 
 } //namespace NetworkMonitor
+
+#include "websocket_client.inl"
 
 #endif // HPP_WEBSOCKETCLIENT_
