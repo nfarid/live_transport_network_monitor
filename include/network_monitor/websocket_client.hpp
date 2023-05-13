@@ -86,6 +86,8 @@ private:
     );
 };
 
+using BoostWebSocketClient = WebSocketClient;
+
 } //namespace NetworkMonitor
 
 #endif // HPP_WEBSOCKETCLIENT_

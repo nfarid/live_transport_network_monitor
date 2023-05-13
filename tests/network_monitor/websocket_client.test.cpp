@@ -8,7 +8,7 @@
 #include <string>
 
 
-using NetworkMonitor::WebSocketClient;
+using NetworkMonitor::BoostWebSocketClient;
 namespace asio = boost::asio;
 using boost::system::error_code;
 
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(class_WebSocketClient)
     asio::ssl::context tls{asio::ssl::context::tlsv12_client};
     tls.load_verify_file(TEST_CACERT_PEM);
 
-    WebSocketClient client{url, endpoint, port, ioc, tls};
+    BoostWebSocketClient client{url, endpoint, port, ioc, tls};
 
     bool isSent = false;
     bool isConnected = false;
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(stomp_networkEvent)
     asio::ssl::context tls{asio::ssl::context::tlsv12_client};
     tls.load_verify_file(TEST_CACERT_PEM);
 
-    WebSocketClient client{url, endpoint, port, ioc, tls};
+    BoostWebSocketClient client{url, endpoint, port, ioc, tls};
 
     std::string stompFrame =
         "STOMP\n"
