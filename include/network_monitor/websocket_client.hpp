@@ -13,10 +13,17 @@
 
 using std::size_t;
 
+
 namespace NetworkMonitor {
 
-/*! \brief Client to connect to a WebSocket server over plain TCP.
+/*! \brief Client to connect to a WebSocket server over TLS.
+ *
+ *  \tparam Resolver        The class to resolve the URL to an IP address.
+ *                          It must support the same interface of boost::asio::ip::tcp::resolver.
+ *  \tparam WebSocketStream The WebSocket stream class.
+ *                          It must support the same interface of boost::beast::websocket::stream.
  */
+template <typename Resolver, typename WebSocketStream>
 class WebSocketClient
 {
 public:
@@ -86,7 +93,13 @@ private:
     );
 };
 
-using BoostWebSocketClient = WebSocketClient;
+using BoostTcp = boost::beast::tcp_stream;
+using BoostSsl = boost::beast::ssl_stream<BoostTcp>;
+using BoostWebsocket = boost::beast::websocket::stream<BoostSsl>;
+using BoostResolver = boost::asio::ip::tcp::resolver;
+
+using BoostWebSocketClient = WebSocketClient<BoostResolver, BoostWebsocket>;
+template class WebSocketClient<BoostResolver, BoostWebsocket>;
 
 } //namespace NetworkMonitor
 

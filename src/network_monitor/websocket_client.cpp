@@ -25,7 +25,8 @@ static void log(const std::string& msg, error_code ec, const char* func, int lin
 #define LOG(MSG, EC) /*log(MSG, EC, __func__, __LINE__)*/
 
 
-WebSocketClient::WebSocketClient(
+template <typename Resolver, typename WebSocketStream>
+WebSocketClient<Resolver,WebSocketStream>::WebSocketClient(
         const std::string& url_,
         const std::string& endpoint_,
         const std::string& port_,
@@ -39,7 +40,8 @@ WebSocketClient::WebSocketClient(
         m_port{port_}
 {}
 
-void WebSocketClient::connect(
+template <typename Resolver, typename WebSocketStream>
+void WebSocketClient<Resolver,WebSocketStream>::connect(
         std::function<void(error_code)> onConnect,
         std::function<void(error_code, std::string&&)> onMessage,
         std::function<void(error_code)> onDisconnect)
@@ -77,7 +79,8 @@ void WebSocketClient::connect(
     });
 }
 
-void WebSocketClient::send(
+template <typename Resolver, typename WebSocketStream>
+void WebSocketClient<Resolver,WebSocketStream>::send(
         const std::string& message,
         std::function<void(error_code)> onSend)
 {
@@ -90,7 +93,8 @@ void WebSocketClient::send(
     });
 }
 
-void WebSocketClient::close(std::function<void (error_code)> onClose) {
+template <typename Resolver, typename WebSocketStream>
+void WebSocketClient<Resolver,WebSocketStream>::close(std::function<void (error_code)> onClose) {
     m_ws.async_close(beast::websocket::close_code::normal, [onClose, this](error_code ec){
         LOG("Closed connection", ec);
         if(ec)
@@ -101,7 +105,8 @@ void WebSocketClient::close(std::function<void (error_code)> onClose) {
     });
 }
 
-void WebSocketClient::listenForMessages(
+template <typename Resolver, typename WebSocketStream>
+void WebSocketClient<Resolver,WebSocketStream>::listenForMessages(
         std::function<void(error_code, std::string&&)> onMessage,
         std::function<void(error_code)> onDisconnect)
 {
