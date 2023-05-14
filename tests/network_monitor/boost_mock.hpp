@@ -7,10 +7,10 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/beast/core/tcp_stream.hpp>
+#include <boost/utility/string_view.hpp>
 
 #include <functional>
 #include <stdexcept>
-#include <string_view>
 
 namespace Mock {
 
@@ -30,18 +30,26 @@ public:
         m_ioc{ioc_}
     {}
 
-    void async_resolve(std::string_view, std::string_view, ResolveHandler&& handler) {
+    void async_resolve(boost::string_view host, boost::string_view service, ResolveHandler&& handler) {
         boost::asio::async_initiate<ResolveHandler, void(const error_code&, results_type)>(
-            [](auto&& handler, auto resolver) {
+            [](auto&& handler, auto resolver, auto host, auto service) {
                 if(s_resolveEc) {
                     const auto failHander = [handler](){handler(s_resolveEc, results_type{}); };
                     boost::asio::post(resolver->m_ioc, failHander);
                 } else {
-                    throw std::logic_error("MockResolver's successful branch is not implemented");
+                    using namespace boost::asio::ip;
+                    boost::asio::post(resolver->m_ioc,
+                        boost::beast::bind_handler(std::move(handler),
+                            s_resolveEc,
+                            results_type::create(tcp::endpoint{make_address("127.0.0.1"), 443}, host, service)
+                        )
+                    );
                 }
             },
             handler,
-            this
+            this,
+            host.to_string(),
+            service.to_string()
         );
     }
 
