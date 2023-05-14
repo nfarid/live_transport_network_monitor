@@ -11,7 +11,7 @@
 
 
 using namespace Mock;
-using TestWebSocketClient = NetworkMonitor::WebSocketClient<MockResolver, boost::beast::websocket::stream<boost::beast::ssl_stream<MockTcpStream> > >;
+using TestWebSocketClient = NetworkMonitor::WebSocketClient<MockResolver, boost::beast::websocket::stream<MockSslStream> >;
 using NetworkMonitor::BoostWebSocketClient;
 namespace asio = boost::asio;
 using boost::system::error_code;
@@ -23,6 +23,7 @@ struct WebSocketClientTestFixture {
     {
         MockResolver::s_resolveEc = {};
         MockTcpStream::s_connectEc = {};
+        MockSslStream::s_handshakeEc = {};
     }
 };
 
@@ -167,6 +168,29 @@ BOOST_AUTO_TEST_CASE(fail_socket_connect, *Timeout{1})
     const auto onConnect = [&calledOnConnect](auto ec){
         calledOnConnect = true;
         BOOST_TEST(ec = asio::error::connection_refused);
+    };
+    client.connect(onConnect);
+    ioc.run();
+
+    BOOST_TEST(calledOnConnect);
+}
+
+BOOST_AUTO_TEST_CASE(fail_tls_connect, *Timeout{1})
+{
+    const std::string url = "some.echo-server.com";
+    const std::string endpoint = "/";
+    const std::string port = "443";
+    asio::ssl::context tls{asio::ssl::context::tlsv12_client};
+    tls.load_verify_file(TEST_CACERT_PEM);
+    asio::io_context ioc{};
+
+    MockSslStream::s_handshakeEc = asio::ssl::error::unspecified_system_error;
+    TestWebSocketClient client{url, endpoint, port, ioc, tls};
+
+    bool calledOnConnect =false;
+    const auto onConnect = [&calledOnConnect](auto ec){
+        calledOnConnect = true;
+        BOOST_TEST(ec = asio::ssl::error::unspecified_system_error);
     };
     client.connect(onConnect);
     ioc.run();

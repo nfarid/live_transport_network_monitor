@@ -7,6 +7,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/beast/core/tcp_stream.hpp>
+#include <boost/beast/ssl/ssl_stream.hpp>
 #include <boost/utility/string_view.hpp>
 
 #include <functional>
@@ -81,9 +82,34 @@ public:
     }
 };
 
+class MockSslStream : public boost::beast::ssl_stream<MockTcpStream> {
+public:
+    using boost::beast::ssl_stream<MockTcpStream>::ssl_stream;
+
+        inline static boost::system::error_code s_handshakeEc{};
+
+    template <typename HandshakeHandler>
+    void async_handshake(boost::asio::ssl::stream_base::handshake_type ht, HandshakeHandler handler)
+    {
+        boost::asio::async_initiate<HandshakeHandler, void(boost::system::error_code)>(
+            [](auto&& handler, auto stream){
+                const auto mockHandler = [handler](){handler(s_handshakeEc);};
+                boost::asio::post(stream->get_executor(), mockHandler);
+            },
+            handler,
+            this
+        );
+    }
+};
+
 //This overload is required by boost::beast when a custom stream is defined
 template <typename TeardownHandler>
 void async_teardown(boost::beast::role_type role, MockTcpStream& socket, TeardownHandler&& handler)
+{}
+
+//This overload is required by boost::beast when a custom stream is defined
+template <typename TeardownHandler>
+void async_teardown(boost::beast::role_type role, MockSslStream& tls, TeardownHandler&& handler)
 {}
 
 } //namespace Mock
