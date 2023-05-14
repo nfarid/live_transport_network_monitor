@@ -22,6 +22,7 @@ struct WebSocketClientTestFixture {
     WebSocketClientTestFixture()
     {
         MockResolver::s_resolveEc = {};
+        MockTcpStream::s_connectEc = {};
     }
 };
 
@@ -147,6 +148,29 @@ BOOST_AUTO_TEST_CASE(fail_resolve, *Timeout{1})
     client.connect(onConnect);
 
     ioc.run();
+    BOOST_TEST(calledOnConnect);
+}
+
+BOOST_AUTO_TEST_CASE(fail_socket_connect, *Timeout{1})
+{
+    const std::string url = "some.echo-server.com";
+    const std::string endpoint = "/";
+    const std::string port = "443";
+    asio::ssl::context tls{asio::ssl::context::tlsv12_client};
+    tls.load_verify_file(TEST_CACERT_PEM);
+    asio::io_context ioc{};
+
+    MockTcpStream::s_connectEc = asio::error::connection_refused;
+    TestWebSocketClient client{url, endpoint, port, ioc, tls};
+
+    bool calledOnConnect =false;
+    const auto onConnect = [&calledOnConnect](auto ec){
+        calledOnConnect = true;
+        BOOST_TEST(ec = asio::error::connection_refused);
+    };
+    client.connect(onConnect);
+    ioc.run();
+
     BOOST_TEST(calledOnConnect);
 }
 
