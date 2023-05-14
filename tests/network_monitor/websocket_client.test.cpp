@@ -11,7 +11,7 @@
 
 
 using namespace Mock;
-using TestWebSocketClient = NetworkMonitor::WebSocketClient<MockResolver, boost::beast::websocket::stream<MockSslStream> >;
+using TestWebSocketClient = NetworkMonitor::WebSocketClient<MockResolver, MockWebSocketStream>;
 using NetworkMonitor::BoostWebSocketClient;
 namespace asio = boost::asio;
 using boost::system::error_code;
@@ -24,6 +24,7 @@ struct WebSocketClientTestFixture {
         MockResolver::s_resolveEc = {};
         MockTcpStream::s_connectEc = {};
         MockSslStream::s_handshakeEc = {};
+        MockWebSocketStream::s_wsHandshakeEc = {};
     }
 };
 
@@ -175,7 +176,7 @@ BOOST_AUTO_TEST_CASE(fail_socket_connect, *Timeout{1})
     BOOST_TEST(calledOnConnect);
 }
 
-BOOST_AUTO_TEST_CASE(fail_tls_connect, *Timeout{1})
+BOOST_AUTO_TEST_CASE(fail_tls_handshake, *Timeout{1})
 {
     const std::string url = "some.echo-server.com";
     const std::string endpoint = "/";
@@ -190,7 +191,30 @@ BOOST_AUTO_TEST_CASE(fail_tls_connect, *Timeout{1})
     bool calledOnConnect =false;
     const auto onConnect = [&calledOnConnect](auto ec){
         calledOnConnect = true;
-        BOOST_TEST(ec = asio::ssl::error::unspecified_system_error);
+        BOOST_TEST(ec == asio::ssl::error::unspecified_system_error);
+    };
+    client.connect(onConnect);
+    ioc.run();
+
+    BOOST_TEST(calledOnConnect);
+}
+
+BOOST_AUTO_TEST_CASE(fail_websocket_handshake, *Timeout{1})
+{
+    const std::string url = "some.echo-server.com";
+    const std::string endpoint = "/";
+    const std::string port = "443";
+    asio::ssl::context tls{asio::ssl::context::tlsv12_client};
+    tls.load_verify_file(TEST_CACERT_PEM);
+    asio::io_context ioc{};
+
+    MockWebSocketStream::s_wsHandshakeEc = boost::beast::websocket::error::upgrade_declined;
+    TestWebSocketClient client{url, endpoint, port, ioc, tls};
+
+    bool calledOnConnect =false;
+    const auto onConnect = [&calledOnConnect](error_code ec){
+        calledOnConnect = true;
+        BOOST_TEST(ec == MockWebSocketStream::s_wsHandshakeEc);
     };
     client.connect(onConnect);
     ioc.run();
