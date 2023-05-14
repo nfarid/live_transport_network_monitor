@@ -10,10 +10,20 @@
 #include <string>
 
 
-using TestWebSocketClient = NetworkMonitor::WebSocketClient<MockResolver, NetworkMonitor::BoostWebsocket>;
+using namespace Mock;
 using NetworkMonitor::BoostWebSocketClient;
 namespace asio = boost::asio;
 using boost::system::error_code;
+using TestWebSocketClient = NetworkMonitor::WebSocketClient<MockResolver, NetworkMonitor::BoostWebsocket>;
+using Timeout = boost::unit_test::timeout;
+
+// This fixture is used to re-initialize all mock properties before a test.
+struct WebSocketClientTestFixture {
+    WebSocketClientTestFixture()
+    {
+        MockResolver::s_resolveEc = {};
+    }
+};
 
 BOOST_AUTO_TEST_SUITE(network_monitor);
 
@@ -113,5 +123,34 @@ BOOST_AUTO_TEST_CASE(stomp_networkEvent)
 
     BOOST_TEST(isResponseCorrect);
 }
+
+
+BOOST_FIXTURE_TEST_SUITE(Connect, WebSocketClientTestFixture);
+
+BOOST_AUTO_TEST_CASE(fail_resolve, *Timeout{1})
+{
+    const std::string url = "some.echo-server.com";
+    const std::string endpoint = "/";
+    const std::string port = "443";
+    asio::ssl::context tls{asio::ssl::context::tlsv12_client};
+    tls.load_verify_file(TEST_CACERT_PEM);
+    asio::io_context ioc{};
+
+    MockResolver::s_resolveEc = asio::error::host_not_found;
+    TestWebSocketClient client{url, endpoint, port, ioc, tls};
+
+    bool calledOnConnect = false;
+    const auto onConnect = [&calledOnConnect](error_code ec){
+        calledOnConnect = true;
+        BOOST_TEST(ec == asio::error::host_not_found);
+    };
+    client.connect(onConnect);
+
+    ioc.run();
+    BOOST_TEST(calledOnConnect);
+}
+
+BOOST_AUTO_TEST_SUITE_END(); //(Connect, WebSocketClientTestFixture)
+
 
 BOOST_AUTO_TEST_SUITE_END(); //network_monitor
