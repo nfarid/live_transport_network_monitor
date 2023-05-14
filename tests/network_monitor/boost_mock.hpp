@@ -6,6 +6,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/post.hpp>
+#include <boost/beast/core/tcp_stream.hpp>
 
 #include <functional>
 #include <stdexcept>
@@ -47,6 +48,35 @@ public:
 private:
    io_context& m_ioc;
 };
+
+
+/*! \brief Mocks boost::beast's TCP socket stream
+ *
+ *  \note Not all methods are mocked, only the ones used for testing
+ */
+class MockTcpStream : public boost::beast::tcp_stream {
+public:
+    using boost::beast::tcp_stream::tcp_stream; //inherit all the constructors
+
+    inline static boost::system::error_code s_connectEc{};
+
+    template <typename ConnectHandler>
+    void async_connect(endpoint_type type, ConnectHandler&& handler) {
+        boost::asio::async_initiate<ConnectHandler, void(boost::system::error_code)>(
+            [](auto&& handler, auto stream){
+                const auto mockHandler = [handler](){handler(s_connectEc);};
+                boost::asio::post(stream->get_executor(), mockHandler);
+            },
+            handler,
+            this
+        );
+    }
+};
+
+//This overload is required by boost::beast when a custom stream is defined
+template <typename TeardownHandler>
+void async_teardown(boost::beast::role_type role, MockTcpStream& socket, TeardownHandler&& handler)
+{}
 
 } //namespace Mock
 

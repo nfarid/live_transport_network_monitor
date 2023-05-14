@@ -11,10 +11,10 @@
 
 
 using namespace Mock;
+using TestWebSocketClient = NetworkMonitor::WebSocketClient<MockResolver, boost::beast::websocket::stream<boost::beast::ssl_stream<MockTcpStream> > >;
 using NetworkMonitor::BoostWebSocketClient;
 namespace asio = boost::asio;
 using boost::system::error_code;
-using TestWebSocketClient = NetworkMonitor::WebSocketClient<MockResolver, NetworkMonitor::BoostWebsocket>;
 using Timeout = boost::unit_test::timeout;
 
 // This fixture is used to re-initialize all mock properties before a test.
