@@ -1,4 +1,6 @@
 
+#include "boost_mock.hpp"
+
 #include <network_monitor/websocket_client.hpp>
 
 #include <boost/asio.hpp>
@@ -8,6 +10,7 @@
 #include <string>
 
 
+using TestWebSocketClient = NetworkMonitor::WebSocketClient<MockResolver, NetworkMonitor::BoostWebsocket>;
 using NetworkMonitor::BoostWebSocketClient;
 namespace asio = boost::asio;
 using boost::system::error_code;
