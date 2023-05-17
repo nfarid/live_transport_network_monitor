@@ -20,7 +20,7 @@ target_sources(network_monitor
         FILES
             "include/network_monitor/file_downloader.hpp"
             "include/network_monitor/transport_network.hpp"
-            "include/network_monitor/websocket_client.hpp" "include/network_monitor/websocket_client.inl"
+            "include/network_monitor/websocket_client.hpp"
 )
 
 target_compile_features(network_monitor
