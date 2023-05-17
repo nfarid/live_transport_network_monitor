@@ -27,7 +27,7 @@ target_sources(network_monitor
 
 target_compile_features(network_monitor
     INTERFACE
-        cxx_std_14
+        cxx_std_17
     PRIVATE
         cxx_std_20
 )
