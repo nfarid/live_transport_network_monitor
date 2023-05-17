@@ -10,8 +10,13 @@ namespace NetworkMonitor  {
 /*! \brief Available STOMP commands, from the STOMP protocol v1.2.
  */
 enum class StompCommand : unsigned {
-    // TODO: Your enum values go here
-    // ...
+    Stomp,
+    Connected,
+    Error,
+    Subscribe,
+    Receipt,
+    Message,
+    Send,
 };
 
 std::ostream& operator<<(std::ostream& os, StompCommand sc);
@@ -21,8 +26,20 @@ std::ostream& operator<<(std::ostream& os, StompCommand sc);
 /*! \brief Available STOMP headers, from the STOMP protocol v1.2.
  */
 enum class StompHeader : unsigned {
-    // TODO: Your enum values go here
-    // ...
+    AcceptVersion,
+    Host,
+    Login,
+    Passcode,
+    Version,
+    Session,
+    ContentLength,
+    ContentType,
+    Receipt,
+    Destination,
+    Ack,
+    ReceiptId,
+    MessageId,
+    Id,
 };
 
 std::ostream& operator<<(std::ostream& os, StompHeader sh);
@@ -32,9 +49,9 @@ std::ostream& operator<<(std::ostream& os, StompHeader sh);
 /*! \brief Error codes for the STOMP protocol
  */
 enum class StompError : unsigned {
-    // TODO: Your enum values go here
-    // ...
     Ok = 0,
+    Parsing,
+    Validation,
 };
 
 std::ostream& operator<<(std::ostream& os, StompError se);
