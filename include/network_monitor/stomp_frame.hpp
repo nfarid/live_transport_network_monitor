@@ -2,22 +2,26 @@
 #ifndef HPP_NETWORKMONITOR_STOMPFRAME_
 #define HPP_NETWORKMONITOR_STOMPFRAME_
 
+#include <cstddef>
 #include <iosfwd>
 #include <string>
+
+using std::size_t;
 
 namespace NetworkMonitor  {
 
 /*! \brief Available STOMP commands, from the STOMP protocol v1.2.
  */
 enum class StompCommand : unsigned {
-    Stomp,
     Connected,
     Error,
-    Subscribe,
-    Receipt,
     Message,
+    Receipt,
     Send,
+    Stomp,
+    Subscribe,
 };
+constexpr size_t StompCommand_count = 7;
 
 std::ostream& operator<<(std::ostream& os, StompCommand sc);
 
@@ -27,20 +31,21 @@ std::ostream& operator<<(std::ostream& os, StompCommand sc);
  */
 enum class StompHeader : unsigned {
     AcceptVersion,
-    Host,
-    Login,
-    Passcode,
-    Version,
-    Session,
+    Ack,
     ContentLength,
     ContentType,
-    Receipt,
     Destination,
-    Ack,
-    ReceiptId,
-    MessageId,
+    Host,
     Id,
+    Login,
+    MessageId,
+    Passcode,
+    Receipt,
+    ReceiptId,
+    Session,
+    Version,
 };
+constexpr size_t StompHeader_count = 14;
 
 std::ostream& operator<<(std::ostream& os, StompHeader sh);
 
@@ -49,7 +54,7 @@ std::ostream& operator<<(std::ostream& os, StompHeader sh);
 /*! \brief Error codes for the STOMP protocol
  */
 enum class StompError : unsigned {
-    Ok = 0,
+    Ok,
     Parsing,
     Validation,
 };

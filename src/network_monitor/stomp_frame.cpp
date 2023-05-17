@@ -1,6 +1,7 @@
 
 #include <network_monitor/stomp_frame.hpp>
 
+#include <array>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -13,120 +14,67 @@ namespace NetworkMonitor {
 
 namespace  {
 
-std::string to_string(StompCommand sc) {
-    switch(sc) {
-    case StompCommand::Stomp:
-        return "STOMP";
-    case StompCommand::Connected:
-        return "CONNECTED";
-    case StompCommand::Error:
-        return "ERROR";
-    case StompCommand::Subscribe:
-        return "SUBSCRIBE";
-    case StompCommand::Receipt:
-        return "RECEIPT";
-    case StompCommand::Message:
-        return "MESSAGE";
-    case StompCommand::Send:
-        return "SEND";
-    }
-    throw std::logic_error("Unreachable: "s + __func__);
+const std::array<std::string_view, StompCommand_count> stompCommandLookup = {
+    "CONNECTED",
+    "ERROR",
+    "MESSAGE",
+    "RECEIPT",
+    "SEND",
+    "STOMP",
+    "SUBSCRIBE",
+};
+
+std::string_view toStringView(StompCommand sc) {
+    return stompCommandLookup[static_cast<size_t>(sc)];
 }
 
-StompCommand toStompCommand(std::string_view str) {
-    if(str == "STOMP" || str == "CONNECT")
+StompCommand toStompCommand(std::string_view sc) {
+    for(size_t i=0; i<size(stompCommandLookup); ++i) {
+        if(stompCommandLookup[i] == sc)
+            return static_cast<StompCommand>(i);
+    }
+    if(sc == "CONNECT")
         return StompCommand::Stomp;
-    else if(str == "CONNECTED")
-        return StompCommand::Connected;
-    else if(str == "ERROR")
-        return StompCommand::Error;
-    else if(str == "SUBSCRIBE")
-        return StompCommand::Subscribe;
-    else if(str == "RECEIPT")
-        return StompCommand::Receipt;
-    else if(str == "MESSAGE")
-        return StompCommand::Message;
-    else if(str == "SEND")
-        return StompCommand::Message;
-    else
-        throw std::runtime_error("Invalid stomp command: "s + std::string(str) );
+    throw std::runtime_error("Invalid stomp command: "s + std::string(sc) );
 }
 
-std::string to_string(StompHeader sh) {
-    switch(sh) {
-    case StompHeader::AcceptVersion:
-        return "accept-version";
-    case StompHeader::Host:
-        return "host";
-    case StompHeader::Login:
-        return "login";
-    case StompHeader::Passcode:
-        return "passcode";
-    case StompHeader::Version:
-        return "version";
-    case StompHeader::Session:
-        return "session";
-    case StompHeader::ContentLength:
-        return "content-length";
-    case StompHeader::ContentType:
-        return "content-type";
-    case StompHeader::Receipt:
-        return "receipt";
-    case StompHeader::Destination:
-        return "destination";
-    case StompHeader::Ack:
-        return "ack";
-    case StompHeader::ReceiptId:
-        return "receipt-id";
-    case StompHeader::MessageId:
-        return "message-id";
-    case StompHeader::Id:
-        return "id";
+const std::array<std::string_view, StompHeader_count> stompHeaderLookup = {
+    "accept-version",
+    "ack",
+    "content-length",
+    "content-type",
+    "destination",
+    "host",
+    "id",
+    "login",
+    "message-id",
+    "passcode",
+    "receipt",
+    "receipt-id",
+    "session",
+    "version",
+};
+
+std::string_view toStringView(StompHeader sh) {
+    return stompHeaderLookup[static_cast<size_t>(sh)];
+}
+
+StompHeader toStompHeader(std::string_view sh) {
+    for(size_t i=0; i<size(stompHeaderLookup); ++i) {
+        if(stompHeaderLookup[i] == sh)
+            return static_cast<StompHeader>(i);
     }
-    throw std::logic_error("Unreachable: "s + __func__);
-}
-
-StompHeader toStompHeader(std::string_view str) {
-    if(str == "accept-version")
-        return StompHeader::AcceptVersion;
-    else if(str =="host")
-        return StompHeader::Host;
-    else if(str =="login")
-        return StompHeader::Login;
-    else if(str =="passcode")
-        return StompHeader::Passcode;
-    else if(str =="version")
-        return StompHeader::Version;
-    else if(str =="session")
-        return StompHeader::Session;
-    else if(str =="content-length")
-        return StompHeader::ContentLength;
-    else if(str =="content-type")
-        return StompHeader::ContentType;
-    else if(str =="receipt")
-        return StompHeader::Receipt;
-    else if(str =="destination")
-        return StompHeader::Destination;
-    else if(str =="ack")
-        return StompHeader::Ack;
-    else if(str =="receipt-id")
-        return StompHeader::ReceiptId;
-    else if(str =="message-id")
-        return StompHeader::MessageId;
-    else if(str =="id")
-        return StompHeader::Id;
-    else
-        throw std::runtime_error("Invalid stomp header: "s + std::string(str) );
+    throw std::runtime_error("Invalid stomp header: "s + std::string(sh) );
 }
 
 } //namespace
 
 std::ostream& operator<<(std::ostream& os, StompCommand sc) {
-    return os<<to_string(sc);
+    return os<<toStringView(sc);
 }
 
 std::ostream& operator<<(std::ostream& os, StompHeader sh) {
-    return os<<to_string(sh);
+    return os<<toStringView(sh);
 }
 
 std::ostream& operator<<(std::ostream& os, StompError se) {
@@ -139,6 +87,7 @@ std::ostream& operator<<(std::ostream& os, StompError se) {
         return os<<"Validation Error";
     }
     throw std::logic_error("Unreachable: "s + __func__);
+
 }
 
 StompFrame::StompFrame() {
