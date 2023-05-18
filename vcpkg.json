@@ -8,6 +8,8 @@
         },
         "boost-asio",
         "boost-beast",
+        "boost-fusion",
+        "boost-spirit",
         "boost-system",
         "boost-test",
         "nlohmann-json",
