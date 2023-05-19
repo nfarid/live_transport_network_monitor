@@ -528,6 +528,53 @@ BOOST_AUTO_TEST_CASE(constructors)
     }
 }
 
+BOOST_AUTO_TEST_CASE(constructor_from_components_full)
+{
+    StompError error;
+    StompFrame frame {
+        error,
+        StompCommand::Stomp,
+        {
+            {StompHeader::AcceptVersion, "42"},
+            {StompHeader::Host, "host.com"},
+        },
+        "Frame body"
+    };
+    BOOST_TEST(error == StompError::Ok);
+    BOOST_TEST(frame.getCommand() == StompCommand::Stomp);
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::AcceptVersion), "42");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Host), "host.com");
+    BOOST_CHECK_EQUAL(frame.getBody(), "Frame body");
+}
+
+BOOST_AUTO_TEST_CASE(constructor_from_components_only_command)
+{
+    StompError error;
+    StompFrame frame {
+        error,
+        StompCommand::Disconnect,
+    };
+    BOOST_TEST(error == StompError::Ok);
+    BOOST_TEST(frame.getCommand() == StompCommand::Disconnect);
+}
+
+BOOST_AUTO_TEST_CASE(constructor_from_components_empty_body)
+{
+    StompError error;
+    StompFrame frame {
+        error,
+        StompCommand::Stomp,
+        {
+            {StompHeader::AcceptVersion, "42"},
+            {StompHeader::Host, "host.com"},
+        }
+    };
+    BOOST_TEST(error == StompError::Ok);
+    BOOST_TEST(frame.getCommand() == StompCommand::Stomp);
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::AcceptVersion), "42");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Host), "host.com");
+}
+
 BOOST_AUTO_TEST_CASE(to_string)
 {
     const std::string plain {

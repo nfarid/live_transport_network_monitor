@@ -3,6 +3,7 @@
 #define HPP_NETWORKMONITOR_STOMPFRAME_
 
 #include <cstddef>
+#include <initializer_list>
 #include <iosfwd>
 #include <string>
 #include <string_view>
@@ -83,6 +84,15 @@ public:
      */
     explicit StompFrame(StompError& ec, std::string&& frame);
 
+    /*! \brief Construct the STOMP frame from command, headers and body
+     *
+     *  The result of the operation is stored in the error code.
+     */
+    /*implicit*/ StompFrame(StompError& ec,
+                            StompCommand sc,
+                            std::unordered_map<StompHeader, std::string>&& headerMp = {},
+                            std::string&& body = "");
+
     StompCommand getCommand() const;
     std::string_view getHeader(StompHeader sh) const;
     std::string_view getBody() const;
@@ -95,6 +105,7 @@ private:
     std::string m_body{};
 
     StompError parseFrame();
+    StompError validation();
 };
 
 } // namespace NetworkMonitor

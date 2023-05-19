@@ -9,6 +9,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 #include <string_view>
 #include <tuple>
 #include <utility>
@@ -105,6 +106,29 @@ std::string unEscapeString(std::string&& str) {
     return str;
 }
 
+std::string escapeString(std::string_view str) {
+    std::string ret;
+    ret.reserve(str.size() );
+    for(const char c : str) {
+        if(c == '\n') {
+            ret.push_back('\\');
+            ret.push_back('n');
+        } else if(c == '\r') {
+            ret.push_back('\\');
+            ret.push_back('r');
+        } else if(c == ':') {
+            ret.push_back('\\');
+            ret.push_back(':');
+        } else if(c == '\\') {
+            ret.push_back('\\');
+            ret.push_back('\\');
+        } else {
+            ret.push_back(c);
+        }
+    }
+    return ret;
+}
+
 } //namespace
 
 std::ostream& operator<<(std::ostream& os, StompCommand sc) {
@@ -140,6 +164,27 @@ StompFrame::StompFrame(StompError& ec, std::string&& frame) :
     ec = parseFrame();
 }
 
+StompFrame::StompFrame(StompError& ec,
+                       StompCommand sc,
+                       std::unordered_map<StompHeader, std::string>&& headerMp,
+                       std::string&& body) :
+    m_command{sc},
+    m_headerMp{std::move(headerMp)},
+    m_body{std::move(body)}
+{
+    ec = validation();
+    if(ec != StompError::Ok)
+        return;
+    std::stringstream ss;
+    ss << m_command << '\n';
+    for(const auto& [k,v] : m_headerMp)
+        ss << k << ':' << escapeString(v) << '\n';
+    ss << '\n';
+    ss << m_body;
+    ss << '\0';
+    ss >> m_frame;
+}
+
 StompCommand StompFrame::getCommand() const {
     return m_command;
 }
@@ -157,6 +202,7 @@ std::string_view StompFrame::getBody() const {
 std::string StompFrame::toString() const {
     return m_frame;
 }
+
 StompError StompFrame::parseFrame() {
     namespace Parser = boost::spirit::x3;
     const auto eol = -Parser::lit('\r') >> '\n';
@@ -223,6 +269,10 @@ StompError StompFrame::parseFrame() {
         return StompError::Parsing;
     m_body.pop_back();
 
+    return validation();
+}
+
+StompError StompFrame::validation() {
     if(m_headerMp.contains(StompHeader::ContentLength) ) {
         const auto lenStr = m_headerMp[StompHeader::ContentLength];
         try {
@@ -276,8 +326,6 @@ StompError StompFrame::parseFrame() {
     break;
     }
 
-
-    //TOOD: validation
     return StompError::Ok;
 }
 
