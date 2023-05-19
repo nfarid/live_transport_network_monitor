@@ -208,9 +208,8 @@ StompError StompFrame::parseFrame() {
         const auto lenStr = m_headerMp[StompHeader::ContentLength];
         try {
             const int len = std::stoi(lenStr);
-            if(m_body.length() < len)
+            if(m_body.length() != len)
                 return StompError::Validation;
-            m_body.resize(len);
         }  catch (const std::exception& ex) {
             std::cerr<<ex.what()<<std::endl;
             return StompError::Parsing;
