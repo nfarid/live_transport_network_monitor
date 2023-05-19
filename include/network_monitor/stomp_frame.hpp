@@ -83,6 +83,10 @@ public:
      */
     explicit StompFrame(StompError& ec, std::string&& frame);
 
+    StompCommand getCommand() const;
+    std::string_view getHeader(StompHeader sh) const;
+    std::string_view getBody() const;
+
 private:
     std::string m_frame{};
     StompCommand m_command{};

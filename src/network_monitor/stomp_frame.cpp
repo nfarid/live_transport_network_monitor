@@ -140,6 +140,20 @@ StompFrame::StompFrame(StompError& ec, std::string&& frame) :
     ec = parseFrame();
 }
 
+StompCommand StompFrame::getCommand() const {
+    return m_command;
+}
+
+std::string_view StompFrame::getHeader(StompHeader sh) const {
+    if(!m_headerMp.contains(sh) )
+        throw std::invalid_argument("Unable to find header: " + std::string(toStringView(sh) ) );
+    return m_headerMp.at(sh);
+}
+
+std::string_view StompFrame::getBody() const {
+    return m_body;
+}
+
 StompError StompFrame::parseFrame() {
     namespace Parser = boost::spirit::x3;
     const auto eol = -Parser::lit('\r') >> '\n';
@@ -186,7 +200,7 @@ StompError StompFrame::parseFrame() {
             m_headerMp[headerName] = escapeString(std::move(iter->second) );
         }
     } catch (std::runtime_error& ex) {
-        std::cerr<<ex.what()<<std::endl;
+        std::cerr<<__func__<<":"<<__LINE__<<" : "<<ex.what()<<std::endl;
         return StompError::Parsing;
     }
 
@@ -213,7 +227,7 @@ StompError StompFrame::parseFrame() {
             if(m_body.length() != len)
                 return StompError::Validation;
         }  catch (const std::exception& ex) {
-            std::cerr<<ex.what()<<std::endl;
+            std::cerr<<__func__<<":"<<__LINE__<<" : "<<ex.what()<<std::endl;
             return StompError::Parsing;
         }
     }
