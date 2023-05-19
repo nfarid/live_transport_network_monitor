@@ -43,9 +43,10 @@ enum class StompHeader : unsigned {
     Receipt,
     ReceiptId,
     Session,
+    Subscription,
     Version,
 };
-constexpr size_t StompHeader_count = 14;
+constexpr size_t StompHeader_count = 15;
 
 std::ostream& operator<<(std::ostream& os, StompHeader sh);
 

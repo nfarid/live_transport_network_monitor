@@ -52,6 +52,7 @@ const std::array<std::string_view, StompHeader_count> stompHeaderLookup = {
     "receipt",
     "receipt-id",
     "session",
+    "subscription",
     "version",
 };
 
