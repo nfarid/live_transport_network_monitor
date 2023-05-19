@@ -78,7 +78,7 @@ StompHeader toStompHeader(std::string_view sh) {
 }
 
 
-std::string escapeString(std::string&& str) {
+std::string unEscapeString(std::string&& str) {
     bool isEscape = false;
     size_t j = 0;
     for(size_t i=0; i<str.size(); ++i) {
@@ -200,7 +200,7 @@ StompError StompFrame::parseFrame() {
         auto& headerLst = std::get<1>(parsed);
         for(auto iter = headerLst.rbegin(); iter != headerLst.rend(); ++iter) {
             auto headerName = toStompHeader(iter->first);
-            m_headerMp[headerName] = escapeString(std::move(iter->second) );
+            m_headerMp[headerName] = unEscapeString(std::move(iter->second) );
         }
     } catch (std::runtime_error& ex) {
         std::cerr<<__func__<<":"<<__LINE__<<" : "<<ex.what()<<std::endl;
