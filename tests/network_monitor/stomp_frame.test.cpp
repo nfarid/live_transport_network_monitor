@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(parse_bad_command)
         "Frame body\0"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(parse_bad_header)
         "Frame body\0"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(parse_missing_body_newline)
         "host:host.com\n";
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(parse_missing_last_header_newline)
         "host:host.com";
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(parse_unrecognized_header)
         "\0"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(parse_empty_header_value)
         "\0"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error == StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(parse_just_command)
     std::string plain = "CONNECT";
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(parse_double_colon_in_header_line)
         "Frame body\0"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK_EQUAL(error, StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(parse_repeated_headers_error_in_second)
         "Frame body\0"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(parse_unterminated_body)
         "Frame body"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(parse_unterminated_body_content_length)
         "Frame body"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(parse_junk_after_body)
         "Frame body\0\n\njunk\n"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(parse_junk_after_body_content_length)
         "Frame body\0\n\njunk\n"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(parse_content_length_wrong_number)
         "Frame body\0"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(parse_content_length_exceeding)
         "Frame body\0"s;
     StompError error;
     StompFrame frame {error, std::move(plain)};
-    BOOST_CHECK(error != StompError::Ok);
+    BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(parse_required_headers)
             "\n"
             "\0"s;
         StompFrame frame {error, std::move(plain)};
-        BOOST_CHECK(error != StompError::Ok);
+        BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE(parse_required_headers)
             "\n"
             "\0"s;
         StompFrame frame {error, std::move(plain)};
-        BOOST_CHECK(error != StompError::Ok);
+        BOOST_TEST(error != StompError::Ok);
 
     // Add more checks here.
     // ...
