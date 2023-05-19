@@ -16,6 +16,7 @@ namespace NetworkMonitor  {
  */
 enum class StompCommand : unsigned {
     Connected,
+    Disconnect,
     Error,
     Message,
     Receipt,
@@ -23,7 +24,7 @@ enum class StompCommand : unsigned {
     Stomp,
     Subscribe,
 };
-constexpr size_t StompCommand_count = 7;
+constexpr size_t StompCommand_count = 8;
 
 std::ostream& operator<<(std::ostream& os, StompCommand sc);
 

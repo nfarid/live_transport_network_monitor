@@ -24,6 +24,7 @@ namespace  {
 
 const std::array<std::string_view, StompCommand_count> stompCommandLookup = {
     "CONNECTED",
+    "DISCONNECT",
     "ERROR",
     "MESSAGE",
     "RECEIPT",
@@ -190,7 +191,6 @@ StompError StompFrame::parseFrame() {
             return StompError::Parsing;
         }
     }
-    //StompHeader::
 
     //Check required headers
     switch(m_command) {
@@ -228,6 +228,7 @@ StompError StompFrame::parseFrame() {
             return StompError::Validation;
         }
     break;
+    case StompCommand::Disconnect:
     case StompCommand::Error:
     break;
     }
