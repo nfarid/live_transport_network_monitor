@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <iosfwd>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 
 using std::size_t;
 
@@ -68,10 +70,6 @@ std::ostream& operator<<(std::ostream& os, StompError se);
  */
 class StompFrame {
 public:
-    /*! \brief Default constructor. Corresponds to an empty, invalid STOMP frame.
-     */
-    StompFrame();
-
     /*! \brief Construct the STOMP frame from a string. The string is copied.
      *
      *  The result of the operation is stored in the error code.
@@ -84,8 +82,13 @@ public:
      */
     explicit StompFrame(StompError& ec, std::string&& frame);
 
-    // TODO: Other APIs go here
-    // ...
+private:
+    std::string m_frame{};
+    StompCommand m_command{};
+    std::unordered_map<StompHeader, std::string> m_headerMp{};
+    std::string m_body{};
+
+    StompError parseFrame();
 };
 
 } // namespace NetworkMonitor
