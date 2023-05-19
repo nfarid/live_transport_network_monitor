@@ -20,6 +20,7 @@ target_sources(network_monitor
         BASE_DIRS "include"
         FILES
             "include/network_monitor/file_downloader.hpp"
+            "include/network_monitor/stomp_client.hpp"
             "include/network_monitor/stomp_frame.hpp"
             "include/network_monitor/transport_network.hpp"
             "include/network_monitor/websocket_client.hpp"
