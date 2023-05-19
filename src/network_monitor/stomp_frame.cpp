@@ -77,6 +77,34 @@ StompHeader toStompHeader(std::string_view sh) {
     throw std::runtime_error("Invalid stomp header: "s + std::string(sh) );
 }
 
+
+std::string escapeString(std::string&& str) {
+    bool isEscape = false;
+    size_t j = 0;
+    for(size_t i=0; i<str.size(); ++i) {
+        if(str[i] == '\\') {
+            isEscape = true;
+            continue;
+        }
+        if(isEscape) {
+            isEscape = false;
+            if(str[i] == 'n')
+                str[j] = '\n';
+            else if(str[i] == 'r')
+                str[j] = '\r';
+            else if(str[i] == ':')
+                str[j] = ':';
+            else
+                throw std::runtime_error("Invalid escape character: \\"s + str[i]);
+        } else {
+            str[j] = str[i];
+        }
+        ++j;
+    }
+    str.resize(j);
+    return str;
+}
+
 } //namespace
 
 std::ostream& operator<<(std::ostream& os, StompCommand sc) {
@@ -155,8 +183,7 @@ StompError StompFrame::parseFrame() {
         auto& headerLst = std::get<1>(parsed);
         for(auto iter = headerLst.rbegin(); iter != headerLst.rend(); ++iter) {
             auto headerName = toStompHeader(iter->first);
-            //TODO: escape strings
-            m_headerMp[headerName] = std::move(iter->second);
+            m_headerMp[headerName] = escapeString(std::move(iter->second) );
         }
     } catch (std::runtime_error& ex) {
         std::cerr<<ex.what()<<std::endl;
