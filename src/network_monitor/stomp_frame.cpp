@@ -163,7 +163,9 @@ StompError StompFrame::parseFrame() {
 
     const auto invalidHeaderChar = Parser::lit(':') | '\r' | '\n';
     const auto headerChar = Parser::char_ - invalidHeaderChar;
-    const auto header = (+headerChar >> ':' >> +headerChar);
+    const auto headerName = +headerChar;
+    const auto headerValue = *headerChar;
+    const auto header = (headerName >> ':' >> headerValue);
 
     const auto frame = command >> eol
                         >> *(header >> eol)
