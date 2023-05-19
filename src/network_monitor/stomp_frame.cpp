@@ -129,6 +129,15 @@ std::string escapeString(std::string_view str) {
     return ret;
 }
 
+
+bool contains(std::initializer_list<StompCommand> lst, StompCommand sc) {
+    for(const auto& elem : lst) {
+        if(elem == sc)
+            return true;
+    }
+    return false;
+}
+
 } //namespace
 
 std::ostream& operator<<(std::ostream& os, StompCommand sc) {
@@ -273,6 +282,9 @@ StompError StompFrame::parseFrame() {
 }
 
 StompError StompFrame::validation() {
+    //Check body
+    if(!contains({StompCommand::Send, StompCommand::Message, StompCommand::Error}, m_command) && !m_body.empty() )
+        return StompError::Validation;
     if(m_headerMp.contains(StompHeader::ContentLength) ) {
         const auto lenStr = m_headerMp[StompHeader::ContentLength];
         try {

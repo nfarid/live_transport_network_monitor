@@ -22,27 +22,30 @@ BOOST_AUTO_TEST_SUITE(stomp_frame);
 BOOST_AUTO_TEST_CASE(parse_well_formed)
 {
     std::string plain {
-        "CONNECT\n"
-        "accept-version:42\n"
-        "host:host.com\n"
+        "MESSAGE\n"
+        "subscription:<subscription_id>\n"
+        "message-id:<message_id>\n"
+        "destination:/passengers\n"
         "\n"
         "Frame body\0"s
     };
     StompError error;
     StompFrame frame {error, std::move(plain)};
     BOOST_TEST_REQUIRE(error == StompError::Ok);
-    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Stomp);
-    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::AcceptVersion), "42");
-    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Host), "host.com");
+    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Message);
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Subscription), "<subscription_id>");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::MessageId), "<message_id>");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Destination), "/passengers");
     BOOST_CHECK_EQUAL(frame.getBody(), "Frame body");
 }
 
 BOOST_AUTO_TEST_CASE(parse_well_formed_content_length)
 {
     std::string plain {
-        "CONNECT\n"
-        "accept-version:42\n"
-        "host:host.com\n"
+        "MESSAGE\n"
+        "subscription:<subscription_id>\n"
+        "message-id:<message_id>\n"
+        "destination:/passengers\n"
         "content-length:10\n"
         "\n"
         "Frame body\0"s
@@ -50,9 +53,10 @@ BOOST_AUTO_TEST_CASE(parse_well_formed_content_length)
     StompError error;
     StompFrame frame {error, std::move(plain)};
     BOOST_TEST_REQUIRE(error == StompError::Ok);
-    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Stomp);
-    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::AcceptVersion), "42");
-    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Host), "host.com");
+    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Message);
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Subscription), "<subscription_id>");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::MessageId), "<message_id>");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Destination), "/passengers");
     BOOST_CHECK_EQUAL(frame.getBody(), "Frame body");
 }
 
@@ -69,6 +73,8 @@ BOOST_AUTO_TEST_CASE(parse_empty_body)
     StompFrame frame {error, std::move(plain)};
     BOOST_TEST_REQUIRE(error == StompError::Ok);
     BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Stomp);
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::AcceptVersion), "42");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Host), "host.com");
     BOOST_CHECK_EQUAL(frame.getBody().size(), 0);
 }
 
@@ -86,20 +92,23 @@ BOOST_AUTO_TEST_CASE(parse_empty_body_content_length)
     StompFrame frame {error, std::move(plain)};
     BOOST_TEST_REQUIRE(error == StompError::Ok);
     BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Stomp);
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::AcceptVersion), "42");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Host), "host.com");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::ContentLength), "0");
     BOOST_CHECK_EQUAL(frame.getBody().size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(parse_empty_headers)
 {
     std::string plain {
-        "DISCONNECT\n"
+        "ERROR\n"
         "\n"
         "Frame body\0"s
     };
     StompError error;
     StompFrame frame {error, std::move(plain)};
     BOOST_TEST_REQUIRE(error == StompError::Ok);
-    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Disconnect);
+    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Error);
     BOOST_CHECK_EQUAL(frame.getBody(), "Frame body");
 }
 
@@ -217,7 +226,7 @@ BOOST_AUTO_TEST_CASE(parse_just_command)
 BOOST_AUTO_TEST_CASE(parse_newline_after_command)
 {
     std::string plain {
-        "DISCONNECT\n"
+        "ERROR\n"
         "\n"
         "version:42\n"
         "host:host.com\n"
@@ -227,7 +236,7 @@ BOOST_AUTO_TEST_CASE(parse_newline_after_command)
     StompError error;
     StompFrame frame {error, std::move(plain)};
     BOOST_TEST_REQUIRE(error == StompError::Ok);
-    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Disconnect);
+    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Error);
 
     // Everything becomes part of the body.
     BOOST_CHECK_EQUAL(frame.getBody().substr(0, 10), "version:42");
@@ -256,7 +265,7 @@ BOOST_AUTO_TEST_CASE(parse_repeated_headers)
         "accept-version:43\n"
         "host:host.com\n"
         "\n"
-        "Frame body\0"s
+        "\0"s
     };
     StompError error;
     StompFrame frame {error, std::move(plain)};
@@ -344,25 +353,27 @@ BOOST_AUTO_TEST_CASE(parse_junk_after_body_content_length)
 BOOST_AUTO_TEST_CASE(parse_newlines_after_body)
 {
     std::string plain {
-        "CONNECT\n"
-        "accept-version:42\n"
-        "host:host.com\n"
+        "MESSAGE\n"
+        "subscription:<subscription_id>\n"
+        "message-id:<message_id>\n"
+        "destination:/passengers\n"
         "\n"
         "Frame body\0\n\n\n"s
     };
     StompError error;
     StompFrame frame {error, std::move(plain)};
     BOOST_TEST_REQUIRE(error == StompError::Ok);
-    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Stomp);
+    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Message);
     BOOST_CHECK_EQUAL(frame.getBody(), "Frame body");
 }
 
 BOOST_AUTO_TEST_CASE(parse_newlines_after_body_content_length)
 {
     std::string plain {
-        "CONNECT\n"
-        "accept-version:42\n"
-        "host:host.com\n"
+        "MESSAGE\n"
+        "subscription:<subscription_id>\n"
+        "message-id:<message_id>\n"
+        "destination:/passengers\n"
         "content-length:10\n"
         "\n"
         "Frame body\0\n\n\n"s
@@ -370,16 +381,17 @@ BOOST_AUTO_TEST_CASE(parse_newlines_after_body_content_length)
     StompError error;
     StompFrame frame {error, std::move(plain)};
     BOOST_TEST_REQUIRE(error == StompError::Ok);
-    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Stomp);
+    BOOST_CHECK_EQUAL(frame.getCommand(), StompCommand::Message);
     BOOST_CHECK_EQUAL(frame.getBody(), "Frame body");
 }
 
 BOOST_AUTO_TEST_CASE(parse_content_length_wrong_number)
 {
     std::string plain {
-        "CONNECT\n"
-        "accept-version:42\n"
-        "host:host.com\n"
+        "MESSAGE\n"
+        "subscription:<subscription_id>\n"
+        "message-id:<message_id>\n"
+        "destination:/passengers\n"
         "content-length:9\n" // This is one byte off
         "\n"
         "Frame body\0"s
@@ -393,9 +405,10 @@ BOOST_AUTO_TEST_CASE(parse_content_length_wrong_number)
 BOOST_AUTO_TEST_CASE(parse_content_length_exceeding)
 {
     std::string plain {
-        "CONNECT\n"
-        "accept-version:42\n"
-        "host:host.com\n"
+        "MESSAGE\n"
+        "subscription:<subscription_id>\n"
+        "message-id:<message_id>\n"
+        "destination:/passengers\n"
         "content-length:15\n" // Way above the actual body length
         "\n"
         "Frame body\0"s
@@ -443,89 +456,29 @@ BOOST_AUTO_TEST_CASE(parse_required_headers)
     }
 }
 
-BOOST_AUTO_TEST_CASE(constructors)
+BOOST_AUTO_TEST_CASE(copy_constructors)
 {
-    std::string plain {
-        "CONNECT\n"
-        "accept-version:42\n"
-        "host:host.com\n"
-        "\n"
-        "Frame body\0"s
-    };
-    StompError error;
-    StompFrame frame {error, std::move(plain)};
-    BOOST_REQUIRE(error == StompError::Ok);
-    BOOST_REQUIRE(frame.getCommand() == StompCommand::Stomp);
-    BOOST_REQUIRE_EQUAL(frame.getHeader(StompHeader::AcceptVersion),
-                        "42");
-    BOOST_REQUIRE_EQUAL(frame.getHeader(StompHeader::Host), "host.com");
-    BOOST_REQUIRE_EQUAL(frame.getBody(), "Frame body");
-
+    // Check that the std::string_view's stay valid when copied object goes out of scope.
+    std::optional<StompFrame> assigned;
     {
-        // Copy constructor
-        const StompFrame copied(frame);
-        BOOST_TEST(copied.getCommand() == StompCommand::Stomp);
-        BOOST_CHECK_EQUAL(copied.getHeader(StompHeader::AcceptVersion),
-                          "42");
-        BOOST_CHECK_EQUAL(copied.getHeader(StompHeader::Host),
-                          "host.com");
-        BOOST_CHECK_EQUAL(copied.getBody(), "Frame body");
-
-        // Copy assignment
-        auto assigned = copied;
-        BOOST_TEST(assigned.getCommand() == StompCommand::Stomp);
-        BOOST_CHECK_EQUAL(assigned.getHeader(StompHeader::AcceptVersion),
-                          "42");
-        BOOST_CHECK_EQUAL(assigned.getHeader(StompHeader::Host),
-                          "host.com");
-        BOOST_CHECK_EQUAL(assigned.getBody(), "Frame body");
+        std::string plain {
+            "MESSAGE\n"
+            "subscription:<subscription_id>\n"
+            "message-id:<message_id>\n"
+            "destination:/passengers\n"
+            "\n"
+            "Frame body\0"s
+        };
+        StompError error;
+        StompFrame newFrame(error, std::move(plain));
+        BOOST_REQUIRE(error == StompError::Ok);
+        assigned = newFrame;
     }
-
-    // Check that the std::string_view's stay valid when copied object goes out
-    // of scope.
-    {
-        std::optional<StompFrame> assigned;
-        {
-            std::string plain {
-                "CONNECT\n"
-                "accept-version:42\n"
-                "host:host.com\n"
-                "\n"
-                "Frame body\0"s
-            };
-            StompError error;
-            StompFrame newFrame(error, std::move(plain));
-            BOOST_REQUIRE(error == StompError::Ok);
-            assigned = newFrame;
-        }
-        BOOST_TEST(assigned->getCommand() == StompCommand::Stomp);
-        BOOST_CHECK_EQUAL(assigned->getHeader(StompHeader::AcceptVersion),
-                          "42");
-        BOOST_CHECK_EQUAL(assigned->getHeader(StompHeader::Host),
-                          "host.com");
-        BOOST_CHECK_EQUAL(assigned->getBody(), "Frame body");
-    }
-
-    // The move tests are performed last.
-    {
-        // Move constructor
-        StompFrame moved(std::move(frame));
-        BOOST_REQUIRE(moved.getCommand() == StompCommand::Stomp);
-        BOOST_REQUIRE_EQUAL(moved.getHeader(StompHeader::AcceptVersion),
-                            "42");
-        BOOST_REQUIRE_EQUAL(moved.getHeader(StompHeader::Host),
-                            "host.com");
-        BOOST_REQUIRE_EQUAL(moved.getBody(), "Frame body");
-
-        // Move assignment
-        auto assigned = std::move(moved);
-        BOOST_TEST(assigned.getCommand() == StompCommand::Stomp);
-        BOOST_CHECK_EQUAL(assigned.getHeader(StompHeader::AcceptVersion),
-                          "42");
-        BOOST_CHECK_EQUAL(assigned.getHeader(StompHeader::Host),
-                          "host.com");
-        BOOST_CHECK_EQUAL(assigned.getBody(), "Frame body");
-    }
+    BOOST_TEST(assigned->getCommand() == StompCommand::Message);
+    BOOST_CHECK_EQUAL(assigned->getHeader(StompHeader::Subscription), "<subscription_id>");
+    BOOST_CHECK_EQUAL(assigned->getHeader(StompHeader::MessageId), "<message_id>");
+    BOOST_CHECK_EQUAL(assigned->getHeader(StompHeader::Destination), "/passengers");
+    BOOST_CHECK_EQUAL(assigned->getBody(), "Frame body");
 }
 
 BOOST_AUTO_TEST_CASE(constructor_from_components_full)
@@ -533,17 +486,19 @@ BOOST_AUTO_TEST_CASE(constructor_from_components_full)
     StompError error;
     StompFrame frame {
         error,
-        StompCommand::Stomp,
+        StompCommand::Message,
         {
-            {StompHeader::AcceptVersion, "42"},
-            {StompHeader::Host, "host.com"},
+            {StompHeader::Subscription, "<subscription_id>"},
+            {StompHeader::MessageId, "<message_id>"},
+            {StompHeader::Destination, "/passengers"},
         },
         "Frame body"
     };
     BOOST_TEST(error == StompError::Ok);
-    BOOST_TEST(frame.getCommand() == StompCommand::Stomp);
-    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::AcceptVersion), "42");
-    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Host), "host.com");
+    BOOST_TEST(frame.getCommand() == StompCommand::Message);
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Subscription), "<subscription_id>");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::MessageId), "<message_id>");
+    BOOST_CHECK_EQUAL(frame.getHeader(StompHeader::Destination), "/passengers");
     BOOST_CHECK_EQUAL(frame.getBody(), "Frame body");
 }
 
@@ -578,15 +533,16 @@ BOOST_AUTO_TEST_CASE(constructor_from_components_empty_body)
 BOOST_AUTO_TEST_CASE(to_string)
 {
     const std::string plain {
-        "CONNECT\n"
-        "accept-version:42\n"
-        "host:host.com\n"
+        "MESSAGE\n"
+        "subscription:<subscription_id>\n"
+        "message-id:<message_id>\n"
+        "destination:/passengers\n"
         "\n"
         "Frame body\0"s
     };
     StompError error;
     StompFrame frame {error, plain};
-    BOOST_REQUIRE(error == StompError::Ok);
+    BOOST_TEST_REQUIRE(error == StompError::Ok);
     BOOST_CHECK_EQUAL(plain, frame.toString());
 }
 
