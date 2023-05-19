@@ -94,6 +94,7 @@ public:
                             std::string&& body = "");
 
     StompCommand getCommand() const;
+    bool hasHeader(StompHeader sh) const;
     std::string_view getHeader(StompHeader sh) const;
     std::string_view getBody() const;
     std::string toString() const;

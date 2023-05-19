@@ -198,6 +198,10 @@ StompCommand StompFrame::getCommand() const {
     return m_command;
 }
 
+bool StompFrame::hasHeader(StompHeader sh) const {
+    return m_headerMp.contains(sh);
+}
+
 std::string_view StompFrame::getHeader(StompHeader sh) const {
     if(!m_headerMp.contains(sh) )
         throw std::invalid_argument("Unable to find header: " + std::string(toStringView(sh) ) );
