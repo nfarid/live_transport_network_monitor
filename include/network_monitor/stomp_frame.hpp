@@ -86,6 +86,7 @@ public:
     StompCommand getCommand() const;
     std::string_view getHeader(StompHeader sh) const;
     std::string_view getBody() const;
+    std::string toString() const;
 
 private:
     std::string m_frame{};

@@ -528,6 +528,20 @@ BOOST_AUTO_TEST_CASE(constructors)
     }
 }
 
+BOOST_AUTO_TEST_CASE(to_string)
+{
+    const std::string plain {
+        "CONNECT\n"
+        "accept-version:42\n"
+        "host:host.com\n"
+        "\n"
+        "Frame body\0"s
+    };
+    StompError error;
+    StompFrame frame {error, plain};
+    BOOST_REQUIRE(error == StompError::Ok);
+    BOOST_CHECK_EQUAL(plain, frame.toString());
+}
 
 
 BOOST_AUTO_TEST_SUITE_END(); // stomp_frame

@@ -154,6 +154,9 @@ std::string_view StompFrame::getBody() const {
     return m_body;
 }
 
+std::string StompFrame::toString() const {
+    return m_frame;
+}
 StompError StompFrame::parseFrame() {
     namespace Parser = boost::spirit::x3;
     const auto eol = -Parser::lit('\r') >> '\n';
