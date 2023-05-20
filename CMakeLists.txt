@@ -65,6 +65,7 @@ target_sources(test-network_monitor
         "tests/network_monitor/stomp_frame.test.cpp"
         "tests/network_monitor/transport_network.test.cpp"
         "tests/network_monitor/websocket_client.test.cpp"
+        "tests/network_monitor/websocketclient_mock.cpp"
         "tests/network_monitor/websocketclient_mock.hpp"
 )
 
