@@ -12,10 +12,18 @@ namespace NetworkMonitor {
 
 /*! \brief Error codes for the STOMP client.
  */
-enum class StompClientError {
+enum class StompClientError : unsigned {
     Ok = 0,
-    // TODO: Your enum values go here
-    // ...
+    UndefinedError,
+    CouldNotCloseWebSocketConnection,
+    CouldNotConnectToWebSocketServer,
+    CouldNotParseMessageAsStompFrame,
+    CouldNotSendStompFrame,
+    CouldNotSendSubscribeFrame,
+    UnexpectedCouldNotCreateValidFrame,
+    UnexpectedMessageContentType,
+    UnexpectedSubscriptionMismatch,
+    WebSocketServerDisconnected,
 };
 
 /*! \brief STOMP client implementing the subset of commands needed by the network-events service.
@@ -54,8 +62,10 @@ public:
     /*! \brief Connect to the STOMP server.
      */
     void Connect(
-        // TODO: You decide the API
-        // ...
+        const std::string& username,
+        const std::string& password,
+        std::function<void(StompClientError)> onConnect = [](auto&&...){},
+        std::function<void(StompClientError)> onDisconnect = [](auto&&...){}
     )
     {
         // ...
@@ -63,10 +73,7 @@ public:
 
     /*! \brief Close the STOMP and WebSocket connection.
      */
-    void Close(
-        // TODO: You decide the API
-        // ...
-    )
+    void Close(std::function<void(StompClientError)> onClose = [](auto&&...){} )
     {
         // ...
     }
@@ -76,8 +83,9 @@ public:
      *  \returns The subscription ID.
      */
     std::string Subscribe(
-        // TODO: You decide the API
-        // ...
+        const std::string& destination,
+        std::function<void(StompClientError, std::string&&)> onSubscribe,
+        std::function<void(StompClientError, std::string&&)> onMessage
     )
     {
         // ...
