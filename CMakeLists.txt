@@ -59,11 +59,13 @@ add_executable(test-network_monitor)
 target_sources(test-network_monitor
     PRIVATE
         "tests/main.test.cpp"
+
         "tests/network_monitor/boost_mock.hpp"
         "tests/network_monitor/file_downloader.test.cpp"
         "tests/network_monitor/stomp_frame.test.cpp"
         "tests/network_monitor/transport_network.test.cpp"
         "tests/network_monitor/websocket_client.test.cpp"
+        "tests/network_monitor/websocketclient_mock.hpp"
 )
 
 target_compile_features(network_monitor

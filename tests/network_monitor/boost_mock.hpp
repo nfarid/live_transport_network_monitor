@@ -1,5 +1,5 @@
-#ifndef NETWORK_MONITOR_TESTS_BOOST_MOCK_H
-#define NETWORK_MONITOR_TESTS_BOOST_MOCK_H
+#ifndef HPP_TEST_BOOSTMOCK_
+#define HPP_TEST_BOOSTMOCK_
 
 #include <network_monitor/websocket_client.hpp>
 
@@ -493,4 +493,4 @@ using TestWebSocketClient = WebSocketClient<
 
 } // namespace NetworkMonitor
 
-#endif // NETWORK_MONITOR_TESTS_BOOST_MOCK_H
+#endif // HPP_TEST_BOOSTMOCK_
