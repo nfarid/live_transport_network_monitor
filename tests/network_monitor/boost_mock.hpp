@@ -21,7 +21,7 @@ public:
     /*! \brief Use this static member in a test to set the error code returned
      *         by async_resolve.
      */
-    static boost::system::error_code resolveEc;
+    static boost::system::error_code s_resolveEc;
 
     /*! \brief Mock for the resolver constructor
      */
@@ -47,13 +47,13 @@ public:
             void (const boost::system::error_code&, resolver::results_type)
         >(
             [](auto&& handler, auto resolver, auto host, auto service) {
-                if (MockResolver::resolveEc) {
+                if (MockResolver::s_resolveEc) {
                     // Failing branch.
                     boost::asio::post(
                         resolver->context_,
                         boost::beast::bind_handler(
                             std::move(handler),
-                            MockResolver::resolveEc,
+                            MockResolver::s_resolveEc,
                             resolver::results_type {} // No resolved endpoints
                         )
                     );
@@ -63,7 +63,7 @@ public:
                         resolver->context_,
                         boost::beast::bind_handler(
                             std::move(handler),
-                            MockResolver::resolveEc,
+                            MockResolver::s_resolveEc,
                             // Note: The create static method is in the public
                             //       resolver interface but it is not
                             //       documented.
@@ -95,7 +95,7 @@ private:
 };
 
 // Out-of-line static member initialization
-inline boost::system::error_code MockResolver::resolveEc {};
+inline boost::system::error_code MockResolver::s_resolveEc {};
 
 /*! \brief Mock the TCP socket stream from Boost.Beast.
  *
@@ -111,7 +111,7 @@ public:
     /*! \brief Use this static member in a test to set the error code returned
      *         by async_connect.
      */
-    static boost::system::error_code connectEc;
+    static boost::system::error_code s_connectEc;
 
     /*! \brief Mock for tcp_stream::async_connect
      */
@@ -131,7 +131,7 @@ public:
                     stream->get_executor(),
                     boost::beast::bind_handler(
                         std::move(handler),
-                        MockTcpStream::connectEc
+                        MockTcpStream::s_connectEc
                     )
                 );
             },
@@ -142,7 +142,7 @@ public:
 };
 
 // Out-of-line static member initialization
-inline boost::system::error_code MockTcpStream::connectEc {};
+inline boost::system::error_code MockTcpStream::s_connectEc {};
 
 // This overload is required by Boost.Beast when you define a custom stream.
 template <typename TeardownHandler>
@@ -170,7 +170,7 @@ public:
     /* \brief Use this static member in a test to set the error code returned by
      *        async_handshake.
      */
-    static boost::system::error_code handshakeEc;
+    static boost::system::error_code s_handshakeEc;
 
     /*! \brief Mock for ssl_stream::async_handshake
      */
@@ -190,7 +190,7 @@ public:
                     stream->get_executor(),
                     boost::beast::bind_handler(
                         std::move(handler),
-                        MockSslStream::handshakeEc
+                        MockSslStream::s_handshakeEc
                     )
                 );
             },
@@ -202,7 +202,7 @@ public:
 
 // Out-of-line static member initialization
 template <typename TcpStream>
-boost::system::error_code MockSslStream<TcpStream>::handshakeEc = {};
+boost::system::error_code MockSslStream<TcpStream>::s_handshakeEc = {};
 
 // This overload is required by Boost.Beast when you define a custom stream.
 template <typename TeardownHandler>
@@ -232,29 +232,29 @@ public:
     /* \brief Use this static member in a test to set the error code returned by
      *        async_handshake.
      */
-    static boost::system::error_code handshakeEc;
+    static boost::system::error_code s_handshakeEc;
 
     /* \brief Use this static member in a test to set the error code returned by
      *        async_read.
      */
-    static boost::system::error_code readEc;
+    static boost::system::error_code s_readEc;
 
     /* \brief Use this static member in a test to set the buffer content read by
      *        async_read.
      */
     // Note: If you intend to use this from multiple threads, you need to
     //       make its access thread safe.
-    static std::string readBuffer;
+    static std::string s_readBuffer;
 
     /* \brief Use this static member in a test to set the error code returned by
      *        async_write.
      */
-    static boost::system::error_code writeEc;
+    static boost::system::error_code s_writeEc;
 
     /* \brief Use this static member in a test to set the error code returned by
      *        async_close.
      */
-    static boost::system::error_code closeEc;
+    static boost::system::error_code s_closeEc;
 
     /*! \brief Mock for websocket::stream::async_handshake
      */
@@ -277,7 +277,7 @@ public:
                     stream->get_executor(),
                     boost::beast::bind_handler(
                         std::move(handler),
-                        MockWebSocketStream::handshakeEc
+                        MockWebSocketStream::s_handshakeEc
                     )
                 );
             },
@@ -340,8 +340,8 @@ public:
                         stream->get_executor(),
                         boost::beast::bind_handler(
                             std::move(handler),
-                            MockWebSocketStream::writeEc,
-                            MockWebSocketStream::writeEc ? 0 : buffers.size()
+                            MockWebSocketStream::s_writeEc,
+                            MockWebSocketStream::s_writeEc ? 0 : buffers.size()
                         )
                     );
                 }
@@ -375,7 +375,7 @@ public:
                         )
                     );
                 } else {
-                    if (!MockWebSocketStream::closeEc) {
+                    if (!MockWebSocketStream::s_closeEc) {
                         stream->closed_ = true;
                     }
 
@@ -384,7 +384,7 @@ public:
                         stream->get_executor(),
                         boost::beast::bind_handler(
                             std::move(handler),
-                            MockWebSocketStream::closeEc
+                            MockWebSocketStream::s_closeEc
                         )
                     );
                 }
@@ -421,15 +421,15 @@ private:
             // Read the buffer. This may be empty — For testing purposes, we
             // interpret this as "no new message".
             size_t nRead;
-            nRead = MockWebSocketStream::readBuffer.size();
+            nRead = MockWebSocketStream::s_readBuffer.size();
             nRead = boost::asio::buffer_copy(
                 buffer.prepare(nRead),
-                boost::asio::buffer(MockWebSocketStream::readBuffer)
+                boost::asio::buffer(MockWebSocketStream::s_readBuffer)
             );
             buffer.commit(nRead);
 
             // We clear the mock buffer for the next read.
-            MockWebSocketStream::readBuffer = "";
+            MockWebSocketStream::s_readBuffer = "";
 
             if (nRead == 0) {
                 // If there was nothing to read, we recursively go and wait for
@@ -450,7 +450,7 @@ private:
                     this->get_executor(),
                     boost::beast::bind_handler(
                         std::move(handler),
-                        MockWebSocketStream::readEc,
+                        MockWebSocketStream::s_readEc,
                         nRead
                     )
                 );
@@ -462,19 +462,19 @@ private:
 // Out-of-line static member initialization
 
 template <typename TransportStream>
-boost::system::error_code MockWebSocketStream<TransportStream>::handshakeEc = {};
+boost::system::error_code MockWebSocketStream<TransportStream>::s_handshakeEc = {};
 
 template <typename TransportStream>
-boost::system::error_code MockWebSocketStream<TransportStream>::readEc = {};
+boost::system::error_code MockWebSocketStream<TransportStream>::s_readEc = {};
 
 template <typename TransportStream>
-std::string MockWebSocketStream<TransportStream>::readBuffer = "";
+std::string MockWebSocketStream<TransportStream>::s_readBuffer = "";
 
 template <typename TransportStream>
-boost::system::error_code MockWebSocketStream<TransportStream>::writeEc = {};
+boost::system::error_code MockWebSocketStream<TransportStream>::s_writeEc = {};
 
 template <typename TransportStream>
-boost::system::error_code MockWebSocketStream<TransportStream>::closeEc = {};
+boost::system::error_code MockWebSocketStream<TransportStream>::s_closeEc = {};
 
 /*! \brief Type alias for the mocked ssl_stream.
  */

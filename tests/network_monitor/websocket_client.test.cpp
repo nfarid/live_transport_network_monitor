@@ -24,14 +24,14 @@ using NetworkMonitor::TestWebSocketClient;
 struct WebSocketClientTestFixture {
     WebSocketClientTestFixture()
     {
-        MockResolver::resolveEc = {};
-        MockTcpStream::connectEc = {};
-        MockTlsStream::handshakeEc = {};
-        MockTlsWebSocketStream::handshakeEc = {};
-        MockTlsWebSocketStream::readEc = {};
-        MockTlsWebSocketStream::readBuffer = "";
-        MockTlsWebSocketStream::writeEc = {};
-        MockTlsWebSocketStream::closeEc = {};
+        MockResolver::s_resolveEc = {};
+        MockTcpStream::s_connectEc = {};
+        MockTlsStream::s_handshakeEc = {};
+        MockTlsWebSocketStream::s_handshakeEc = {};
+        MockTlsWebSocketStream::s_readEc = {};
+        MockTlsWebSocketStream::s_readBuffer = "";
+        MockTlsWebSocketStream::s_writeEc = {};
+        MockTlsWebSocketStream::s_closeEc = {};
     }
 };
 
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(fail_resolve, *timeout {1})
     boost::asio::io_context ioc {};
 
     // Set the expected error codes.
-    MockResolver::resolveEc = boost::asio::error::host_not_found;
+    MockResolver::s_resolveEc = boost::asio::error::host_not_found;
 
     TestWebSocketClient client {url, endpoint, port, ioc, ctx};
     bool calledOnConnect {false};
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(fail_resolve, *timeout {1})
         calledOnConnect = true;
         BOOST_CHECK_EQUAL(ec, boost::asio::error::host_not_found);
     }};
-    client.Connect(onConnect);
+    client.connect(onConnect);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(fail_socket_connect, *timeout {1})
     boost::asio::io_context ioc {};
 
     // Set the expected error codes.
-    MockTcpStream::connectEc = boost::asio::error::connection_refused;
+    MockTcpStream::s_connectEc = boost::asio::error::connection_refused;
 
     TestWebSocketClient client {url, endpoint, port, ioc, ctx};
     bool calledOnConnect {false};
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(fail_socket_connect, *timeout {1})
         calledOnConnect = true;
         BOOST_CHECK_EQUAL(ec, boost::asio::error::connection_refused);
     }};
-    client.Connect(onConnect);
+    client.connect(onConnect);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(fail_tls_handshake, *timeout {1})
 
     // Set the expected error codes.
     namespace error = boost::asio::ssl::error;
-    MockTlsStream::handshakeEc = error::stream_truncated;
+    MockTlsStream::s_handshakeEc = error::stream_truncated;
 
     TestWebSocketClient client {url, endpoint, port, ioc, ctx};
     bool calledOnConnect {false};
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(fail_tls_handshake, *timeout {1})
         calledOnConnect = true;
         BOOST_CHECK_EQUAL(ec, error::stream_truncated);
     }};
-    client.Connect(onConnect);
+    client.connect(onConnect);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(fail_websocket_handshake, *timeout {1})
 
     // Set the expected error codes.
     using error = boost::beast::websocket::error;
-    MockTlsWebSocketStream::handshakeEc = error::upgrade_declined;
+    MockTlsWebSocketStream::s_handshakeEc = error::upgrade_declined;
 
     TestWebSocketClient client {url, endpoint, port, ioc, ctx};
     bool calledOnConnect {false};
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(fail_websocket_handshake, *timeout {1})
         calledOnConnect = true;
         BOOST_CHECK(ec == error::upgrade_declined);
     }};
-    client.Connect(onConnect);
+    client.connect(onConnect);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -180,9 +180,9 @@ BOOST_AUTO_TEST_CASE(successful_nothing_to_read, *timeout {1})
         BOOST_CHECK(!ec);
 
         // This test assumes that Close() works.
-        client.Close();
+        client.close();
     }};
-    client.Connect(onConnect);
+    client.connect(onConnect);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -213,9 +213,9 @@ BOOST_AUTO_TEST_CASE(successful_no_connecthandler, *timeout {1})
         BOOST_CHECK(!ec);
 
         // This test assumes that Close() works.
-        client.Close();
+        client.close();
     });
-    client.Connect();
+    client.connect();
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(one_message, *timeout {1})
     boost::asio::io_context ioc {};
 
     // We don't set any error code because we expect the connection to succeed.
-    MockTlsWebSocketStream::readBuffer = message;
+    MockTlsWebSocketStream::s_readBuffer = message;
 
     TestWebSocketClient client {url, endpoint, port, ioc, ctx};
     bool calledOnMessage {false};
@@ -249,9 +249,9 @@ BOOST_AUTO_TEST_CASE(one_message, *timeout {1})
         BOOST_CHECK_EQUAL(msg, message);
 
         // This test assumes that Close() works.
-        client.Close();
+        client.close();
     }};
-    client.Connect(nullptr, onMessage);
+    client.connect(nullptr, onMessage);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(two_messages, *timeout {1})
     boost::asio::io_context ioc {};
 
     // We don't set any error code because we expect the connection to succeed.
-    MockTlsWebSocketStream::readBuffer = message;
+    MockTlsWebSocketStream::s_readBuffer = message;
 
     TestWebSocketClient client {url, endpoint, port, ioc, ctx};
     size_t calledOnMessage {0};
@@ -281,14 +281,14 @@ BOOST_AUTO_TEST_CASE(two_messages, *timeout {1})
         BOOST_CHECK_EQUAL(msg, message);
 
         // Place a new message in the buffer.
-        MockTlsWebSocketStream::readBuffer = message;
+        MockTlsWebSocketStream::s_readBuffer = message;
 
         // This test assumes that Close() works.
         if (calledOnMessage == 2) {
-            client.Close();
+            client.close();
         }
     }};
-    client.Connect(nullptr, onMessage);
+    client.connect(nullptr, onMessage);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -309,8 +309,8 @@ BOOST_AUTO_TEST_CASE(fail, *timeout {1})
 
     // Set the expected error codes.
     using error = boost::beast::websocket::error;
-    MockTlsWebSocketStream::readBuffer = message;
-    MockTlsWebSocketStream::readEc = error::bad_data_frame;
+    MockTlsWebSocketStream::s_readBuffer = message;
+    MockTlsWebSocketStream::s_readEc = error::bad_data_frame;
 
     // Because in this test we do not expect the onMessage handler to be called,
     // we need to close the connection after some time.
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(fail, *timeout {1})
     timer.expires_after(std::chrono::milliseconds(250));
     timer.async_wait([&client](auto ec) {
         // This test assumes that Close() works.
-        client.Close();
+        client.close();
     });
     bool calledOnMessage {false};
     auto onMessage {[&calledOnMessage, &message, &client](auto ec, auto msg) {
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(fail, *timeout {1})
         calledOnMessage = true;
         BOOST_CHECK(false);
     }};
-    client.Connect(nullptr, onMessage);
+    client.connect(nullptr, onMessage);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(no_handler, *timeout {1})
     boost::asio::io_context ioc {};
 
     // We don't set any error code because we expect the connection to succeed.
-    MockTlsWebSocketStream::readBuffer = message;
+    MockTlsWebSocketStream::s_readBuffer = message;
 
     // Because in this test we do not expect the onMessage handler to be called,
     // we need to close the connection after some time.
@@ -357,9 +357,9 @@ BOOST_AUTO_TEST_CASE(no_handler, *timeout {1})
     timer.expires_after(std::chrono::milliseconds(250));
     timer.async_wait([&client](auto ec) {
         // This test assumes that Close() works.
-        client.Close();
+        client.close();
     });
-    client.Connect(nullptr, nullptr);
+    client.connect(nullptr, nullptr);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(send_before_connect, *timeout {1})
         calledOnSend = true;
         BOOST_CHECK(ec == boost::asio::error::operation_aborted);
     }};
-    client.Send(message, onSend);
+    client.send(message, onSend);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -417,11 +417,11 @@ BOOST_AUTO_TEST_CASE(one_message, *timeout {1})
         BOOST_CHECK(!ec);
 
         // This test assumes that Close() works.
-        client.Close();
+        client.close();
     }};
-    client.Connect([&client, &message, &onSend](auto ec) {
+    client.connect([&client, &message, &onSend](auto ec) {
         BOOST_REQUIRE(!ec);
-        client.Send(message, onSend);
+        client.send(message, onSend);
     });
     ioc.run();
 
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(fail, *timeout {1})
 
     // Set the expected error codes.
     using error = boost::beast::websocket::error;
-    MockTlsWebSocketStream::writeEc = error::bad_data_frame;
+    MockTlsWebSocketStream::s_writeEc = error::bad_data_frame;
 
     TestWebSocketClient client {url, endpoint, port, ioc, ctx};
     bool calledOnSend {false};
@@ -452,11 +452,11 @@ BOOST_AUTO_TEST_CASE(fail, *timeout {1})
         BOOST_CHECK(ec == error::bad_data_frame);
 
         // This test assumes that Close() works.
-        client.Close();
+        client.close();
     }};
-    client.Connect([&client, &message, &onSend](auto ec) {
+    client.connect([&client, &message, &onSend](auto ec) {
         BOOST_REQUIRE(!ec);
-        client.Send(message, onSend);
+        client.send(message, onSend);
     });
     ioc.run();
 
@@ -492,9 +492,9 @@ BOOST_AUTO_TEST_CASE(close, *timeout {1})
     auto onConnect {[&calledOnConnect, &client, &onClose](auto ec) {
         calledOnConnect = true;
         BOOST_REQUIRE(!ec);
-        client.Close(onClose);
+        client.close(onClose);
     }};
-    client.Connect(onConnect);
+    client.connect(onConnect);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -522,7 +522,7 @@ BOOST_AUTO_TEST_CASE(close_before_connect, *timeout {1})
         calledOnClose = true;
         BOOST_CHECK(ec == boost::asio::error::operation_aborted);
     }};
-    client.Close(onClose);
+    client.close(onClose);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -553,14 +553,14 @@ BOOST_AUTO_TEST_CASE(close_no_disconnect, *timeout {1})
     auto onConnect {[&calledOnConnect, &client, &onClose](auto ec) {
         calledOnConnect = true;
         BOOST_REQUIRE(!ec);
-        client.Close(onClose);
+        client.close(onClose);
     }};
     auto onDisconnect {[](auto) {
         // onDisconnect should never be called if it was the user to end the
         // connection.
         BOOST_CHECK(false);
     }};
-    client.Connect(onConnect);
+    client.connect(onConnect);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -605,7 +605,7 @@ BOOST_AUTO_TEST_CASE(echo, *timeout {20})
     auto onConnect {[&client, &connected, &onSend, &message](auto ec) {
         connected = !ec;
         if (!ec) {
-            client.Send(message, onSend);
+            client.send(message, onSend);
         }
     }};
     auto onClose {[&disconnected](auto ec) {
@@ -617,11 +617,11 @@ BOOST_AUTO_TEST_CASE(echo, *timeout {20})
                       &echo](auto ec, auto received) {
         messageReceived = !ec;
         echo = std::move(received);
-        client.Close(onClose);
+        client.close(onClose);
     }};
 
     // We must call io_context::run for asynchronous callbacks to run.
-    client.Connect(onConnect, onReceive);
+    client.connect(onConnect, onReceive);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.
@@ -687,7 +687,7 @@ BOOST_AUTO_TEST_CASE(network_events, *timeout {3})
     auto onConnect {[&client, &connected, &onSend, &message](auto ec) {
         connected = !ec;
         if (!ec) {
-            client.Send(message, onSend);
+            client.send(message, onSend);
         }
     }};
     auto onClose {[&disconnected](auto ec) {
@@ -699,11 +699,11 @@ BOOST_AUTO_TEST_CASE(network_events, *timeout {3})
                      &response](auto ec, auto received) {
         messageReceived = !ec;
         response = std::move(received);
-        client.Close(onClose);
+        client.close(onClose);
     }};
 
     // We must call io_context::run for asynchronous callbacks to run.
-    client.Connect(onConnect, onReceive);
+    client.connect(onConnect, onReceive);
     ioc.run();
 
     // When we get here, the io_context::run function has run out of work to do.

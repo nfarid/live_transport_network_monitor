@@ -66,10 +66,10 @@ public:
      *  \param onDisconnect  Called when the connection is closed by the server
      *                       or due to a connection error.
      */
-    void Connect(
-        std::function<void (boost::system::error_code)> onConnect = nullptr,
-        std::function<void (boost::system::error_code, std::string&&)> onMessage = nullptr,
-        std::function<void (boost::system::error_code)> onDisconnect = nullptr
+    void connect(
+        std::function<void(boost::system::error_code)> onConnect = nullptr,
+        std::function<void(boost::system::error_code, std::string&&)> onMessage = nullptr,
+        std::function<void(boost::system::error_code)> onDisconnect = nullptr
     )
     {
         // Save the user callbacks for later use.
@@ -93,9 +93,9 @@ public:
      *  \param onSend  Called when a message is sent successfully or if it
      *                 failed to send.
      */
-    void Send(
+    void send(
         const std::string& message,
-        std::function<void (boost::system::error_code)> onSend = nullptr
+        std::function<void(boost::system::error_code)> onSend = nullptr
     )
     {
         m_ws.async_write(boost::asio::buffer(message),
@@ -111,7 +111,7 @@ public:
      *  \param onClose Called when the connection is closed, successfully or
      *                 not.
      */
-    void Close(std::function<void (boost::system::error_code)> onClose = nullptr) {
+    void close(std::function<void(boost::system::error_code)> onClose = nullptr) {
         m_closed = true;
         m_ws.async_close(boost::beast::websocket::close_code::none,
             [onClose](auto ec) {
