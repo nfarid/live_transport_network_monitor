@@ -91,7 +91,7 @@ public:
     /*implicit*/ StompFrame(StompError& ec,
                             StompCommand sc,
                             std::unordered_map<StompHeader, std::string>&& headerMp = {},
-                            std::string&& body = "");
+                            std::string body = "");
 
     StompCommand getCommand() const;
     bool hasHeader(StompHeader sh) const;

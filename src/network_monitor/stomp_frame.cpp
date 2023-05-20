@@ -176,7 +176,7 @@ StompFrame::StompFrame(StompError& ec, std::string&& frame) :
 StompFrame::StompFrame(StompError& ec,
                        StompCommand sc,
                        std::unordered_map<StompHeader, std::string>&& headerMp,
-                       std::string&& body) :
+                       std::string body) :
     m_command{sc},
     m_headerMp{std::move(headerMp)},
     m_body{std::move(body)}
