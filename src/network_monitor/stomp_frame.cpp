@@ -186,12 +186,16 @@ StompFrame::StompFrame(StompError& ec,
         return;
     std::stringstream ss;
     ss << m_command << '\n';
-    for(const auto& [k,v] : m_headerMp)
-        ss << k << ':' << escapeString(v) << '\n';
+    for(const auto& [k,v] : m_headerMp) {
+        if(m_command == StompCommand::Stomp || m_command == StompCommand::Connected)
+            ss << k << ':' << v << '\n';
+        else
+            ss << k << ':' << escapeString(v) << '\n';
+    }
     ss << '\n';
     ss << m_body;
     ss << '\0';
-    ss >> m_frame;
+    m_frame = ss.str();
 }
 
 StompCommand StompFrame::getCommand() const {
@@ -259,7 +263,10 @@ StompError StompFrame::parseFrame() {
         auto& headerLst = std::get<1>(parsed);
         for(auto iter = headerLst.rbegin(); iter != headerLst.rend(); ++iter) {
             auto headerName = toStompHeader(iter->first);
-            m_headerMp[headerName] = unEscapeString(std::move(iter->second) );
+            if(m_command == StompCommand::Stomp || m_command == StompCommand::Connected)
+                m_headerMp[headerName] = std::move(iter->second);
+            else
+                m_headerMp[headerName] = unEscapeString(std::move(iter->second) );
         }
     } catch (std::runtime_error& ex) {
         std::cerr<<__func__<<":"<<__LINE__<<" : "<<ex.what()<<std::endl;
