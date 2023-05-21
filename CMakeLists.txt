@@ -62,6 +62,7 @@ target_sources(test-network_monitor
 
         "tests/network_monitor/boost_mock.hpp"
         "tests/network_monitor/file_downloader.test.cpp"
+        "tests/network_monitor/stomp_client.test.cpp"
         "tests/network_monitor/stomp_frame.test.cpp"
         "tests/network_monitor/transport_network.test.cpp"
         "tests/network_monitor/websocket_client.test.cpp"
