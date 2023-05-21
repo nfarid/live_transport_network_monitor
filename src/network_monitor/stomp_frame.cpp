@@ -224,21 +224,21 @@ StompError StompFrame::parseFrame() {
     namespace Parser = boost::spirit::x3;
     const auto eol = -Parser::lit('\r') >> '\n';
 
-    constexpr auto clientCommand = Parser::string("SEND")
-                                 | Parser::string("SUBSCRIBE")
-                                 | Parser::string("UNSUBSCRIBE")
-                                 | Parser::string("BEGIN")
-                                 | Parser::string("COMMIT")
-                                 | Parser::string("ABORT")
-                                 | Parser::string("ACK")
-                                 | Parser::string("NACK")
-                                 | Parser::string("DISCONNECT")
-                                 | Parser::string("CONNECT")
-                                 | Parser::string("STOMP");
-    constexpr auto serverCommand = Parser::string("CONNECTED")
-                                 | Parser::string("MESSAGE")
-                                 | Parser::string("RECEIPT")
-                                 | Parser::string("ERROR");
+    constexpr auto clientCommand = Parser::string("SEND\n")
+                                 | Parser::string("SUBSCRIBE\n")
+                                 | Parser::string("UNSUBSCRIBE\n")
+                                 | Parser::string("BEGIN\n")
+                                 | Parser::string("COMMIT\n")
+                                 | Parser::string("ABORT\n")
+                                 | Parser::string("ACK\n")
+                                 | Parser::string("NACK\n")
+                                 | Parser::string("DISCONNECT\n")
+                                 | Parser::string("CONNECT\n")
+                                 | Parser::string("STOMP\n");
+    constexpr auto serverCommand = Parser::string("CONNECTED\n")
+                                 | Parser::string("MESSAGE\n")
+                                 | Parser::string("RECEIPT\n")
+                                 | Parser::string("ERROR\n");
     const auto command = (clientCommand | serverCommand);
 
     const auto invalidHeaderChar = Parser::lit(':') | '\r' | '\n';
@@ -247,7 +247,7 @@ StompError StompFrame::parseFrame() {
     const auto headerValue = *headerChar;
     const auto header = (headerName >> ':' >> headerValue);
 
-    const auto frame = command >> eol
+    const auto frame = command
                         >> *(header >> eol)
                         >> eol
                         >> *Parser::char_;
@@ -258,6 +258,7 @@ StompError StompFrame::parseFrame() {
        return StompError::Parsing;
 
     try {
+        std::get<0>(parsed).pop_back();
         m_command = toStompCommand(std::get<0>(parsed) );
 
         auto& headerLst = std::get<1>(parsed);
