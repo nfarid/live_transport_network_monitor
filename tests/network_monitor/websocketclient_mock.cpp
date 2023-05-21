@@ -333,25 +333,25 @@ void MockWebSocketClientForStomp::onMessage(const std::string& msg)
         break;
     }
     case StompCommand::Subscribe: {
-//        auto [receiptId, subscriptionId] = checkSubscription(frame);
-//        if (subscriptionId != "") {
-//            if (receiptId != "") {
-//                std::clog<<"MockStompServer: OnMessage: Send receipt"<<std::endl;
-//                s_messageQueue.push(makeReceiptFrame(receiptId).ToString());
-//            }
-//            std::clog<<"MockStompServer: OnMessage: About to send subscription messages: "<<s_subscriptionMessages.size()<<std::endl;
-//            for (const auto& message : s_subscriptionMessages) {
-//                s_messageQueue.push(MakeMessageFrame(
-//                    s_endpoint,
-//                    subscriptionId,
-//                    message
-//                ).ToString());
-//            }
-//        } else {
-//            std::clog<<"MockStompServer: OnMessage: Error: Subscribe"<<std::endl;
-//            s_messageQueue.push(makeErrorFrame("Subscribe").ToString());
-//            s_triggerDisconnection = true;
-//        }
+        auto [receiptId, subscriptionId] = checkSubscription(frame);
+        if (subscriptionId != "") {
+            if (receiptId != "") {
+                std::clog<<"MockStompServer: OnMessage: Send receipt"<<std::endl;
+                s_messageQueue.push(makeReceiptFrame(receiptId).toString() );
+            }
+            std::clog<<"MockStompServer: OnMessage: About to send subscription messages: "<<s_subscriptionMessages.size()<<std::endl;
+            for (const auto& message : s_subscriptionMessages) {
+                s_messageQueue.push(makeMessageFrame(
+                    s_endpoint,
+                    subscriptionId,
+                    message
+                ).toString() );
+            }
+        } else {
+            std::clog<<"MockStompServer: OnMessage: Error: Subscribe"<<std::endl;
+            s_messageQueue.push(makeErrorFrame("Subscribe").toString() );
+            s_triggerDisconnection = true;
+        }
         break;
     }
     default:
