@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(connect, *timeout {1})
     }};
     client.connect(username, password, onConnect);
     ioc.run();
-    BOOST_CHECK(connected);
+    BOOST_TEST(connected);
 }
 
 BOOST_AUTO_TEST_CASE(connect_nullptr, *timeout {1})
@@ -106,11 +106,11 @@ BOOST_AUTO_TEST_CASE(connect_nullptr, *timeout {1})
     timer.expires_after(std::chrono::milliseconds {250});
     timer.async_wait([&didTimeout, &client](auto ec) {
         didTimeout = true;
-        BOOST_CHECK(!ec);
+        BOOST_TEST(!ec);
         client.close([](auto ec) {});
     });
     ioc.run();
-    BOOST_CHECK(didTimeout);
+    BOOST_TEST(didTimeout);
 }
 
 BOOST_AUTO_TEST_CASE(fail_to_connect_ws, *timeout {1})
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(fail_to_connect_ws, *timeout {1})
     }};
     client.connect(username, password, onConnect);
     ioc.run();
-    BOOST_CHECK(calledOnConnect);
+    BOOST_TEST(calledOnConnect);
 }
 
 BOOST_AUTO_TEST_CASE(fail_to_connect_auth, *timeout {1})
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(fail_to_connect_auth, *timeout {1})
     };
     auto onConnect {[](auto ec) {
         // We should never get here.
-        BOOST_CHECK(false);
+        BOOST_TEST(false);
     }};
     bool calledOnDisconnect {false};
     auto onDisconnect {[&calledOnDisconnect](auto ec) {
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(fail_to_connect_auth, *timeout {1})
     }};
     client.connect(username, password, onConnect, onDisconnect);
     ioc.run();
-    BOOST_CHECK(calledOnDisconnect);
+    BOOST_TEST(calledOnDisconnect);
 }
 
 BOOST_AUTO_TEST_CASE(close, *timeout {1})
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(close, *timeout {1})
     }};
     client.connect(username, password, onConnect);
     ioc.run();
-    BOOST_CHECK(closed);
+    BOOST_TEST(closed);
 }
 
 BOOST_AUTO_TEST_CASE(close_nullptr, *timeout {1})
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(close_nullptr, *timeout {1})
     client.connect(username, password, onConnect);
     ioc.run();
     // If we got here the Close() worked.
-    BOOST_CHECK(connected);
+    BOOST_TEST(connected);
 }
 
 BOOST_AUTO_TEST_CASE(close_before_connect, *timeout {1})
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(close_before_connect, *timeout {1})
     }};
     client.close(onClose);
     ioc.run();
-    BOOST_CHECK(closed);
+    BOOST_TEST(closed);
 }
 
 BOOST_AUTO_TEST_CASE(subscribe, *timeout {1})
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(subscribe, *timeout {1})
     auto onSubscribe {[&calledOnSubscribe, &client](auto ec, auto&& id) {
         calledOnSubscribe = true;
         BOOST_CHECK_EQUAL(ec, StompClientError::Ok);
-        BOOST_CHECK(id != "");
+        BOOST_TEST(id != "");
         client.close([](auto ec) {});
     }};
     auto onMessage {[](auto ec, auto&& msg) {
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(subscribe, *timeout {1})
     }};
     client.connect(username, password, onConnect);
     ioc.run();
-    BOOST_CHECK(calledOnSubscribe);
+    BOOST_TEST(calledOnSubscribe);
 }
 
 BOOST_AUTO_TEST_CASE(subscribe_onSubscribe_nullptr, *timeout {1})
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(subscribe_onSubscribe_nullptr, *timeout {1})
     }};
     client.connect(username, password, onConnect);
     ioc.run();
-    BOOST_CHECK(subscribed);
+    BOOST_TEST(subscribed);
 }
 
 BOOST_AUTO_TEST_CASE(subscribe_onMessage_nullptr, *timeout {1})
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(subscribe_onMessage_nullptr, *timeout {1})
     auto onSubscribe {[&calledOnSubscribe, &client](auto ec, auto&& id) {
         calledOnSubscribe = true;
         BOOST_CHECK_EQUAL(ec, StompClientError::Ok);
-        BOOST_CHECK(id != "");
+        BOOST_TEST(id != "");
         client.close([](auto ec) {});
     }};
     auto onConnect {[&client, &onSubscribe](auto ec) {
@@ -393,7 +393,7 @@ BOOST_AUTO_TEST_CASE(subscribe_onMessage_nullptr, *timeout {1})
     }};
     client.connect(username, password, onConnect);
     ioc.run();
-    BOOST_CHECK(calledOnSubscribe);
+    BOOST_TEST(calledOnSubscribe);
 }
 
 BOOST_AUTO_TEST_CASE(subscribe_get_message, *timeout {1})
@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(subscribe_get_message, *timeout {1})
     }};
     client.connect(username, password, onConnect);
     ioc.run();
-    BOOST_CHECK(messageReceived);
+    BOOST_TEST(messageReceived);
 }
 
 BOOST_AUTO_TEST_CASE(subscribe_before_connect, *timeout {1})
@@ -463,11 +463,11 @@ BOOST_AUTO_TEST_CASE(subscribe_before_connect, *timeout {1})
     }};
     auto onMessage {[](auto ec, auto&& msg) {
         // We should never get here.
-        BOOST_CHECK(false);
+        BOOST_TEST(false);
     }};
     client.subscribe("/passengers", onSubscribe, onMessage);
     ioc.run();
-    BOOST_CHECK(calledOnSubscribe);
+    BOOST_TEST(calledOnSubscribe);
 }
 
 BOOST_AUTO_TEST_CASE(subscribe_after_close, *timeout {1})
@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(subscribe_after_close, *timeout {1})
     }};
     client.connect(username, password, onConnect);
     ioc.run();
-    BOOST_CHECK(calledOnSubscribe);
+    BOOST_TEST(calledOnSubscribe);
 }
 
 BOOST_AUTO_TEST_CASE(subscribe_to_invalid_endpoint, *timeout {1})
@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(subscribe_to_invalid_endpoint, *timeout {1})
     };
     auto onSubscribe {[](auto ec, auto&& id) {
         // We should never get here.
-        BOOST_CHECK(false);
+        BOOST_TEST(false);
     }};
     bool calledOnDisconnect {false};
     auto onDisconnect {[&calledOnDisconnect](auto ec) {
@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE(subscribe_to_invalid_endpoint, *timeout {1})
     }};
     client.connect(username, password, onConnect, onDisconnect);
     ioc.run();
-    BOOST_CHECK(calledOnDisconnect);
+    BOOST_TEST(calledOnDisconnect);
 }
 
 static std::string GetEnvVar(
@@ -626,9 +626,9 @@ BOOST_AUTO_TEST_CASE(live, *timeout {3})
 
     ioc.run();
 
-    BOOST_CHECK(calledOnConnect);
-    BOOST_CHECK(calledOnSubscribe);
-    BOOST_CHECK(calledOnClose);
+    BOOST_TEST(calledOnConnect);
+    BOOST_TEST(calledOnSubscribe);
+    BOOST_TEST(calledOnClose);
 }
 
 BOOST_AUTO_TEST_SUITE_END(); // class_StompClient
