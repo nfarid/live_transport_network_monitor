@@ -253,8 +253,8 @@ StompError StompFrame::parseFrame() {
                         >> *Parser::char_;
 
 
-   std::tuple<std::string, std::vector<std::pair<std::string, std::string> >, std::string> parsed;
-   if(!Parser::parse(m_frame.cbegin(), m_frame.cend(), frame, parsed) )
+    std::tuple<std::string, std::vector<std::pair<std::string, std::string> >, std::string> parsed;
+    if(!Parser::parse(m_frame.cbegin(), m_frame.cend(), frame, parsed) )
        return StompError::Parsing;
 
     try {
