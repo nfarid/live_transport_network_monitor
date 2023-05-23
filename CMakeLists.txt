@@ -54,6 +54,20 @@ target_link_libraries(network_monitor
 
 
 
+#Executable
+add_executable(exe-network-monitor)
+target_sources(exe-network-monitor
+    PRIVATE
+        "src/main.cpp"
+        "src/network_monitor.hpp"
+)
+target_link_libraries(exe-network-monitor
+    PRIVATE
+        live_transport::network_monitor
+)
+
+
+
 #Tests
 add_executable(test-network_monitor)
 target_sources(test-network_monitor
