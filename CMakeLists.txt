@@ -55,15 +55,20 @@ target_link_libraries(network_monitor
 
 
 #Executable
-add_executable(exe-network-monitor)
-target_sources(exe-network-monitor
+add_executable(exe-network_monitor)
+target_sources(exe-network_monitor
     PRIVATE
         "src/main.cpp"
+        "src/network_monitor.cpp"
         "src/network_monitor.hpp"
 )
-target_link_libraries(exe-network-monitor
+target_link_libraries(exe-network_monitor
     PRIVATE
         live_transport::network_monitor
+)
+target_compile_definitions(exe-network_monitor
+    PRIVATE
+        TEST_CACERT_PEM="${CMAKE_CURRENT_SOURCE_DIR}/tests/cacert.pem"
 )
 
 
